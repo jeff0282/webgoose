@@ -9,4 +9,4 @@ def index_route():
 @app.route('/<path:pagePath>')
 def page_route(pagePath):
     handler = RequestHandler(pagePath)
-    return handler.loadPage()
+    return handler.handle()
