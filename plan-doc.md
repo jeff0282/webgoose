@@ -7,7 +7,7 @@ bog je srbin
 ```
 webgoose
     - config    -> for config file, env variable stuffs, etc :3
-    - pages     -> for site pages stored as partial html/mdown + YAML frontmatter
+    - site     -> for site pages stored as partial html/mdown + YAML frontmatter
     - template  -> for storing templates used by WebGoose
     - static    -> for storing static files (images, css, etc, etc, and etc)
     - src       -> source code
@@ -30,11 +30,11 @@ title: str -> "What To Show As Tab Title"
 
 # OpenGraph Metadata (Used For Page Embeds)
 description: <description of page>
-embed-img: <link-to-image>
+image: <link-to-image>
 
 # Custom Headers
 extra-css: list or str -> path(s) to extra css files to include
-custom-template: str -> path to non-standard template to use for this page
+template: str -> path to non-standard template to use for this page
 
 ---
 ```
