@@ -4,15 +4,17 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% block head %}
-    {% endblock %}
+    <link rel="stylesheet" href="/static/style.css">
+    {% include 'site-essential/headers.html' %}
 </head>
 <body>
-    <h3> Source: </h3>
-    <pre>{{content}}</pre>
-    <hr>
-    <h3>Content:</h3>
-    {% block body %}
-    {% endblock %}
+    <div class="top">
+        <p>WebGoose Testing Template</p>
+    </div>
+
+    <div class="content">
+        {% block body %}
+        {% endblock %}
+    </div>
 </body>
 </html>

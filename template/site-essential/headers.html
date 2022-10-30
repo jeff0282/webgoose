@@ -1,0 +1,10 @@
+<title> {{meta['title']}} </title>
+<meta property="og:title" value="{{meta['title']}}"/>
+
+{% if 'description' in meta %}
+<meta property="og:description" value="{{meta['description']}}"/>
+{% endif %}
+
+{% if 'image' in meta %}
+<meta property="og:image" value="{{meta['image']}}"/>
+{% endif %}

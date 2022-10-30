@@ -10,37 +10,36 @@ import os, time
 class RequestHandler(object):
 
     def __init__(self, URI):
-        self.URI = f"{URI}index.md" if URI[-1] == "/" else f"{URI}.md"
-        self.fullPath = self.getPagePath()
+        self.URI = URI
+        self.pagePath = self.getPagePath()
         self.buildPath = self.getBuildPath()
 
 
     def handle(self):
         if self.pageExists():
             if self.pageNeedsBuilt():
+                print("serving new build")
                 page = self.buildPage()
-                if not os.path.exists(os.path.dirname(self.buildPath)):
-                    os.makedirs(os.path.dirname(self.buildPath))
-                buildPage = open(self.buildPath, "w")
-                buildPage.write(page)
-                buildPage.close()
                 return page
             else:
+                print("serving existing build")
                 return self.getPage()
 
         abort(404)
 
 
     def getPagePath(self):
-        return os.path.join(project_root, f"site/{self.URI}")
+        relPagePath = f"{self.URI}index.md" if self.URI[-1] == "/" else f"{self.URI}.md"
+        return os.path.join(project_root, f"site/{relPagePath}")
 
 
     def getBuildPath(self):
-        return os.path.join(project_root, f"build/{self.URI}")
+        relBuildPath = f"{self.URI}index.html" if self.URI[-1] == "/" else f"{self.URI}.html"
+        return os.path.join(project_root, f"build/{relBuildPath}")
 
 
     def pageExists(self):
-        return os.path.exists(self.fullPath)
+        return os.path.exists(self.pagePath)
 
 
     def pageHasBuild(self):
@@ -49,18 +48,16 @@ class RequestHandler(object):
 
     def pageNeedsBuilt(self):
         if self.pageHasBuild():
-            lastModTime = os.path.getmtime(self.fullPath) 
+            lastModTime = os.path.getmtime(self.pagePath) 
             lastBuildTime = os.path.getmtime(self.buildPath)
-            print((lastModTime > lastBuildTime) | (time.time() - lastBuildTime > 86400))
             return (lastModTime > lastBuildTime) | (time.time() - lastBuildTime > 86400)
 
         return True
 
 
-
     def buildPage(self):
-        builder = PageBuilder(self.fullPath)
-        return builder.render()
+        builder = PageBuilder(self.pagePath, self.buildPath)
+        return builder.buildPage()
 
 
     def getPage(self):
