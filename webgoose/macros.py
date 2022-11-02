@@ -1,26 +1,28 @@
 
-def created(page=None):
-    if page:
-        return f"Created Macro Called - Value {page}"
+def created(content, args):
+    if args:
+        return f"Created Macro Called - Value {args[0]}"
     
     return "Created Macro Called With No Value"
 
 
-def lastModified():
+def lastModified(content, args):
     pass
 
 
-def version():
+def version(content, args):
     pass
 
 
-def tableOfContents():
+def tableOfContents(content, args):
     pass
 
 
-def random():
+def random(content, args):
+    if len(args) > 0:
+        return ""
     return "myballs"
 
 
-def builtUsing():
+def builtUsing(content, args):
     pass

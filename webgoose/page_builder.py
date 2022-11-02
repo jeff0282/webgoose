@@ -1,9 +1,10 @@
 
+import frontmatter, cmarkgfm, re, os
 from bs4 import BeautifulSoup
 from flask import render_template_string
 from webgoose import project_root
 from webgoose.macro_processor import MacroProcessor
-import frontmatter, cmarkgfm, re, os
+from cmarkgfm.cmark import Options as cmarkgfmOptions
 
 import importlib
 util = importlib.import_module('webgoose.util')        
@@ -66,9 +67,13 @@ class PageBuilder(object):
     
 
     def createPageBody(self):
+        # Process Macros 
         processor = MacroProcessor(self.page.content)
-        body = processor.processMacros()
-        return cmarkgfm.github_flavored_markdown_to_html(body).strip()
+        processedMarkdown = processor.processMacros()
+
+        # Convert Markdown To HTML
+        options = (cmarkgfmOptions.CMARK_OPT_UNSAFE)
+        return cmarkgfm.github_flavored_markdown_to_html(processedMarkdown, options).strip()
 
 
     def outputBuildToFile(self, pageBuild):

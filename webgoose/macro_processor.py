@@ -17,27 +17,22 @@ class MacroProcessor(object):
 
     
     def processMacros(self):
-        print(self.content)
-        return re.sub(r"{&([^&]+)&}", self.applyMacro, self.content)
+        return re.sub(r"{@([^@]+)@}", self.applyMacro, self.content)
 
 
-    def cleanSplitMacro(self, macro):
-        listMacro = macro[2:-2].split(':')
-        listMacro = list(map(lambda x: x.strip(), listMacro))
+    def splitMacro(self, macro):
+        # Strip Delimeters '{@ @}' From Macro, Trim Resulting Whitespace
+        macro = macro[2:-2].strip()
         
-        # The REGEX That Finds Macros Forces Inclusion Of Inner Text
-        # Thus Macro Command Can Be Assumed To Exist
-        command = listMacro[0]
-        arg = False
-        if len(listMacro) > 1:
-            arg = listMacro[1]
-        
-        return command, arg
+        command = re.match(r"^[^\s|\"]+", macro).group()
+        args = re.findall(r"\"([^\"]+)\"", macro)        
+        return command, args
 
     
     def applyMacro(self, macro):
-        command, arg = self.cleanSplitMacro(macro.group(0))
+        command, args = self.splitMacro(macro.group(0))
         if command in self.MACROS.keys():
-            return self.MACROS[command](arg) if arg else self.MACROS[command]()    
+            result = self.MACROS[command](self.content, args)
+            return result
         
         return ""
