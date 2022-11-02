@@ -27,6 +27,10 @@ def getBuildPath(URI):
     return getAbsolutePath(relativePath)
 
 
+def getTemplatePath(templateName):
+    return getAbsolutePath(f"template/{templateName}")
+
+
 def getBuildInfoPath(URI):
     relativePath = getPathFromProjectRoot(URI, "build", ".json")
     return getAbsolutePath(relativePath)

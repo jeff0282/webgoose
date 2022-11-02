@@ -2,7 +2,7 @@
 from webgoose.page_builder import PageBuilder
 from webgoose import project_root
 from flask import abort
-import os
+import os, json
 
 import importlib
 util = importlib.import_module('webgoose.util')
@@ -34,32 +34,36 @@ class RequestHandler(object):
 
 
     def handleRequest(self):
-        #try:
-        if os.path.exists(self.markdownPath):
-            if self.requiresRebuild():
-                builder = self.buildHandler(self.markdownPath, self.buildPath, self.buildInfoPath)
-                builder.buildPage()
+        try:
+            if os.path.exists(self.markdownPath):
+                if self.requiresRebuild():
+                    print("requires rebuild")
+                    builder = self.buildHandler(self.markdownPath, self.buildPath, self.buildInfoPath)
+                    builder.buildPage()
 
-            return self.getCurrentBuild()
-        else:
-            pass
-            #raise PageNotFoundException(self.URI)
+                return self.getCurrentBuild()
+            else:
+                pass
+                raise PageNotFoundException(self.URI)
+        
+        except PageNotFoundException as e:
+            print(e)
+            abort(404)
 
-        #except PageNotFoundException as e:
-            
-            #abort(404)
-
-        #except Exception as e:
-            #abort(500)
+        except Exception as e:
+            print(e)
+            abort(500)
 
 
     def requiresRebuild(self):
-        """
         if os.path.exists(self.buildPath):
+            with open(self.buildInfoPath, "r") as file:
+                jsonInfo = json.load(file)
+
             buildTime = os.path.getmtime(self.buildPath)
             lastModTime = os.path.getmtime(self.markdownPath)
-            return (lastModTime > buildTime)
-        """
+            templateLastMod = os.path.getmtime(util.getTemplatePath(jsonInfo['template']))
+            return (lastModTime > buildTime) | (templateLastMod > buildTime)
 
         return True
 

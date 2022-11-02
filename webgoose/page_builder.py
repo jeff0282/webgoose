@@ -1,5 +1,5 @@
 
-import frontmatter, cmarkgfm, re, os
+import frontmatter, cmarkgfm, re, os, json, time
 from bs4 import BeautifulSoup
 from flask import render_template_string
 from webgoose import project_root
@@ -29,19 +29,23 @@ class PageBuilder(object):
         # Render New Page Build
         newBuild = self.renderPage(body)
 
+        # Create Build Info Document
+        newBuildInfo = self.createBuildInfo()
+
         # Write New Build To File
-        self.outputBuildToFile(newBuild)
+        self.outputBuildFiles(newBuild, newBuildInfo)
+
 
 
     def renderPage(self, body):
-        template = self.page.metadata["template"] if "template" in self.page.metadata else "default.html"
-        if util.templateExists(template):
-            pageContent = "{% extends '"+template+"' %}" + "{% block content %}" + body + "{% endblock %}"
+        if util.templateExists(self.page.metadata['template']):
+            pageContent = "{% extends '"+self.page.metadata['template']+"' %}" + "{% block content %}" + body + "{% endblock %}"
             renderedTemplate = render_template_string(pageContent, meta=self.page.metadata)
             htmlSoup = BeautifulSoup(renderedTemplate, "html.parser")
             return htmlSoup.prettify()
         else:
-            raise PageBuilderException(f"Template {template} Does Not Exist")
+            raise PageBuilderException(f"Template {self.page.metadata['template']} Does Not Exist")
+
 
 
     def checkAddMetadata(self, body):
@@ -63,6 +67,9 @@ class PageBuilder(object):
                 self.page.metadata['description'] = firstPara.string[:80]
             else: 
                 self.page.metadata['description'] = "No Description Was Provided For This Page"
+
+        if not "template" in self.page.metadata:
+            self.page.metadata['template'] = "default.html"
         
     
 
@@ -76,17 +83,28 @@ class PageBuilder(object):
         return cmarkgfm.github_flavored_markdown_to_html(processedMarkdown, options).strip()
 
 
-    def outputBuildToFile(self, pageBuild):
+
+    def createBuildInfo(self):
+
+        buildInfo = {
+            "template": self.page.metadata['template']
+        }
+
+        return json.dumps(buildInfo, indent=4)
+
+
+
+    def outputBuildFiles(self, pageBuild, buildInfo):
         if not os.path.exists(os.path.dirname(self.buildPath)):
             os.makedirs(os.path.dirname(self.buildPath))
         
         with open(self.buildPath, "w", encoding="utf-8") as file:
             file.write(pageBuild)
 
-        """
         with open(self.buildInfoPath, "w", encoding="utf-8") as file:
             file.write(buildInfo)
-        """
+
+
 
     def getPageContent(self):
         # Request_Handler Checks For Markdown File's Existence Beforehand
