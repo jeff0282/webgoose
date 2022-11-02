@@ -2,14 +2,11 @@
 from bs4 import BeautifulSoup
 from flask import render_template_string
 from webgoose import project_root
-import webgoose.util as util
+from webgoose.macro_processor import MacroProcessor
 import frontmatter, cmarkgfm, re, os
 
-
-class PageBuilderException():
-    
-    def __init__(self):
-        pass
+import importlib
+util = importlib.import_module('webgoose.util')        
 
 
 class PageBuilder(object):
@@ -39,7 +36,9 @@ class PageBuilder(object):
         template = self.page.metadata["template"] if "template" in self.page.metadata else "default.html"
         if util.templateExists(template):
             pageContent = "{% extends '"+template+"' %}" + "{% block content %}" + body + "{% endblock %}"
-            return render_template_string(pageContent, meta=self.page.metadata)
+            renderedTemplate = render_template_string(pageContent, meta=self.page.metadata)
+            htmlSoup = BeautifulSoup(renderedTemplate, "html.parser")
+            return htmlSoup.prettify()
         else:
             raise PageBuilderException(f"Template {template} Does Not Exist")
 
@@ -67,7 +66,9 @@ class PageBuilder(object):
     
 
     def createPageBody(self):
-        return cmarkgfm.github_flavored_markdown_to_html(self.page.content).strip()
+        processor = MacroProcessor(self.page.content)
+        body = processor.processMacros()
+        return cmarkgfm.github_flavored_markdown_to_html(body).strip()
 
 
     def outputBuildToFile(self, pageBuild):
@@ -77,6 +78,10 @@ class PageBuilder(object):
         with open(self.buildPath, "w", encoding="utf-8") as file:
             file.write(pageBuild)
 
+        """
+        with open(self.buildInfoPath, "w", encoding="utf-8") as file:
+            file.write(buildInfo)
+        """
 
     def getPageContent(self):
         # Request_Handler Checks For Markdown File's Existence Beforehand

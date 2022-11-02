@@ -1,5 +1,6 @@
 
 from webgoose import project_root
+from pathvalidate import is_valid_filepath
 import os
 
 
@@ -7,14 +8,17 @@ import os
 # URL AND PATH UTILS
 # ======================
 
-def sanitizeURI(URI):
-        # TODO
-        return URI
+def validateURI(URI):
+    if len(URI) > 1:
+        if URI[0] == "/":
+            URI = URI[1:]
+        return is_valid_filepath(URI)
+    else:
+        return True
 
 
 def getMarkdownPath(URI):
     relativePath = getPathFromProjectRoot(URI, "site", ".md")
-    print(relativePath)
     return getAbsolutePath(relativePath)
 
 
@@ -29,8 +33,8 @@ def getBuildInfoPath(URI):
 
 
 def getPathFromProjectRoot(URI, pathFromProjectRoot, extension):
-    path = expandURIShortening(URI)
-    relativePath = os.path.join(project_root , f"{pathFromProjectRoot}/{path}{extension}")
+    path = URIToRelativePath(URI)
+    relativePath = os.path.join(pathFromProjectRoot, path+extension)
     return relativePath
 
 
@@ -39,8 +43,9 @@ def getAbsolutePath(relativePath):
     return absolutePath
 
 
-def expandURIShortening(URI):
+def URIToRelativePath(URI):
     if len(URI) > 1:
+        if URI[0] == "/": URI = URI[1:]
         return f"{URI}index" if URI[-1] == "/" else f"{URI}"
     else:
         return "index"
