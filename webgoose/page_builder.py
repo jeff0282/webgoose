@@ -1,6 +1,7 @@
 
-import frontmatter, cmarkgfm, jinja2, os, re
+import frontmatter, cmarkgfm, os, re
 from bs4 import BeautifulSoup
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from webgoose.macro_processor import MacroProcessor
 from cmarkgfm.cmark import Options as cmarkgfmOptions
 
@@ -30,31 +31,44 @@ class PageBuilder(object):
         # Get Page Metadata & Content
         meta, content = self.getPageData(filePath)
 
-        # Generate Body Content
-        body = self.processPageContent(filePath, content)
+        # Convert Page Markdown To Markup
+        body = self.convPageContent(filePath, content)
 
         # Use Body To Fill In Metadata Where Requires
         meta = self.checkAddMetadata(filePath, meta, body)
 
         # Render New Page Build
-        return self.render(meta, body)
+        render = self.render(meta, body)
+
+        # Apply Macros, Use Beautiful Soup To Convert HTML Entities (necessary for macros)
+        soup = BeautifulSoup(render, "html.parser")
+        processor = MacroProcessor()
+        finalMarkup = processor.processMacros(filePath, str(soup))
+
+        # Use Beautiful Soup (again, I know it's bad) To Prettify HTML Before Output
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # Beautiful soup should __NEVER__ convert &lt; and &gt; to < or > (WRITE UNIT TESTS TO CHECK)
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        soup = BeautifulSoup(finalMarkup, "html.parser")
+        return soup.prettify(formatter="html")
 
 
 
     def render(self, meta, body):
         # Setup Jinja2 Environment
-        jinjaEnv = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(self.TEMPLATE_LOCATION)
-        )
+        jinjaEnv = Environment(
+            loader=FileSystemLoader(self.TEMPLATE_LOCATION),
+            autoescape=select_autoescape(
+                enabled_extensions=('html', 'xml'),
+                default_for_string=True,
+            ))
 
         # Wrap Body in Jinja2 Tags, Create Jinja2 Template Object From String
-        body = "{% extends 'default.html' %} {% block content %}" + body + "{% endblock %}"
+        body = "{% extends 'default.html' %} {% block content %}" + re.sub("%", "&#37;", body) + "{% endblock %}"
         template = jinjaEnv.from_string(body)
 
         # Render Template, Pass Metadata Dict To Jinja2, Prettify Page (Fix Indentation, etc) and Return Result
-        render = template.render({"meta": meta})
-        htmlSoup = BeautifulSoup(render, "html.parser")
-        return htmlSoup.prettify()
+        return template.render({"meta": meta})
 
 
 
@@ -82,11 +96,8 @@ class PageBuilder(object):
         
     
 
-    def processPageContent(self, filePath, content):
-        # Process Macros 
-        processor = MacroProcessor(filePath, content)
-        processedMarkdown = processor.processMacros()
-
+    def convPageContent(self, filePath, content):
         # Convert Markdown To HTML
         options = (cmarkgfmOptions.CMARK_OPT_UNSAFE)
-        return cmarkgfm.github_flavored_markdown_to_html(processedMarkdown, options).strip()
+        return cmarkgfm.github_flavored_markdown_to_html(content, options).strip()
+

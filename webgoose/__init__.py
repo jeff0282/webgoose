@@ -1,3 +1,5 @@
-import os
 
-project_root = os.path.dirname(os.path.dirname(__file__))
+import configparser
+
+config = configparser.ConfigParser()
+config.read("config/config.ini")
