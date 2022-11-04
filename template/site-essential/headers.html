@@ -12,7 +12,7 @@
     <meta property="og:image" value="{{meta['image']}}"/>
     {% endif %}
 
-    {% if 'extra-stylesheet' %}
-    <link rel="stylesheet" href="{{meta['extra-stylesheet']}}">
+    {% if 'extra-stylesheet' in meta %}
+    <link rel="stylesheet" href="{{meta['extra-stylesheet']}}"/>
     {% endif %}
 {% endif %}

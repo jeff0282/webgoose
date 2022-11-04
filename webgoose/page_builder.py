@@ -1,8 +1,7 @@
 
-import frontmatter, cmarkgfm, re, os, json, time
+import frontmatter, cmarkgfm, os, re
 from bs4 import BeautifulSoup
-from flask import render_template_string
-from webgoose import project_root
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from webgoose.macro_processor import MacroProcessor
 from cmarkgfm.cmark import Options as cmarkgfmOptions
 
@@ -12,112 +11,93 @@ util = importlib.import_module('webgoose.util')
 
 class PageBuilder(object):
 
-    def __init__(self, markdownPath, buildPath, buildInfoPath):
-        self.markdownPath = markdownPath
-        self.buildPath = buildPath
-        self.buildInfoPath = buildInfoPath
-        self.page = self.getPageContent()
+
+    TEMPLATE_LOCATION = os.path.join(os.getcwd(), "template")
 
 
-    def buildPage(self):
-        # Generate Body Content
-        body = self.createPageBody()
+    def __init__(self):
+        pass
+
+
+    def getPageData(self, filePath):
+        with open(filePath, "r") as file:
+            fileContent = frontmatter.load(file)
+            return fileContent.metadata, fileContent.content
+
+
+
+    def buildPage(self, filePath):
+
+        # Get Page Metadata & Content
+        meta, content = self.getPageData(filePath)
+
+        # Convert Page Markdown To Markup
+        body = self.convPageContent(filePath, content)
 
         # Use Body To Fill In Metadata Where Requires
-        self.checkAddMetadata(body)
+        meta = self.checkAddMetadata(filePath, meta, body)
 
         # Render New Page Build
-        newBuild = self.renderPage(body)
+        render = self.render(meta, body)
 
-        # Create Build Info Document
-        newBuildInfo = self.createBuildInfo()
+        # Apply Macros, Use Beautiful Soup To Convert HTML Entities (necessary for macros)
+        soup = BeautifulSoup(render, "html.parser")
+        processor = MacroProcessor()
+        finalMarkup = processor.processMacros(filePath, str(soup))
 
-        # Write New Build To File
-        self.outputBuildFiles(newBuild, newBuildInfo)
-
-
-
-    def renderPage(self, body):
-        if util.templateExists(self.page.metadata['template']):
-            pageContent = "{% extends '"+self.page.metadata['template']+"' %}" + "{% block content %}" + body + "{% endblock %}"
-            renderedTemplate = render_template_string(pageContent, meta=self.page.metadata)
-            htmlSoup = BeautifulSoup(renderedTemplate, "html.parser")
-            return htmlSoup.prettify()
-        else:
-            raise PageBuilderException(f"Template {self.page.metadata['template']} Does Not Exist")
+        # Use Beautiful Soup (again, I know it's bad) To Prettify HTML Before Output
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # Beautiful soup should __NEVER__ convert &lt; and &gt; to < or > (WRITE UNIT TESTS TO CHECK)
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        soup = BeautifulSoup(finalMarkup, "html.parser")
+        return soup.prettify(formatter="html")
 
 
 
-    def checkAddMetadata(self, body):
+    def render(self, meta, body):
+        # Setup Jinja2 Environment
+        jinjaEnv = Environment(
+            loader=FileSystemLoader(self.TEMPLATE_LOCATION),
+            autoescape=select_autoescape(
+                enabled_extensions=('html', 'xml'),
+                default_for_string=True,
+            ))
+
+        # Wrap Body in Jinja2 Tags, Create Jinja2 Template Object From String
+        body = "{% extends 'default.html' %} {% block content %}" + re.sub("%", "&#37;", body) + "{% endblock %}"
+        template = jinjaEnv.from_string(body)
+
+        # Render Template, Pass Metadata Dict To Jinja2, Prettify Page (Fix Indentation, etc) and Return Result
+        return template.render({"meta": meta})
+
+
+
+    def checkAddMetadata(self, filePath, meta, body):
         htmlSoup = BeautifulSoup(body, "html.parser")
 
-        if not "title" in self.page.metadata:
-            self.page.metadata['title'] = htmlSoup.find(re.compile("^h[1-6]$")).string
-
-        if not "title" in self.page.metadata:
-            title = htmlSoup.find(re.compile("^h[1-6]$"))
+        if not "title" in meta:
+            title = htmlSoup.find(re.compile("^h1$"))
             if title:
-                self.page.metadata['title'] = title.string
+                meta['title'] = title.string
             else: 
-                self.page.metadata['title'] = "No Title"
+                meta['title'] = util.getFilenameFromPath(filePath)
 
-        if not "description" in self.page.metadata:
+        if not "description" in meta:
             firstPara = htmlSoup.find("p")
             if firstPara:
-                self.page.metadata['description'] = firstPara.string[:80]
+                meta['description'] = firstPara.string[:80]
             else: 
-                self.page.metadata['description'] = "No Description Was Provided For This Page"
+                meta['description'] = "No Description Was Provided For This Page"
 
-        if not "template" in self.page.metadata:
-            self.page.metadata['template'] = "default.html"
+        if not "template" in meta:
+            meta['template'] = "default.html"
+
+        return meta
         
     
 
-    def createPageBody(self):
-        # Process Macros 
-        processor = MacroProcessor(self.page.content)
-        processedMarkdown = processor.processMacros()
-
+    def convPageContent(self, filePath, content):
         # Convert Markdown To HTML
         options = (cmarkgfmOptions.CMARK_OPT_UNSAFE)
-        return cmarkgfm.github_flavored_markdown_to_html(processedMarkdown, options).strip()
+        return cmarkgfm.github_flavored_markdown_to_html(content, options).strip()
 
-
-
-    def createBuildInfo(self):
-
-        buildInfo = {
-            "template": self.page.metadata['template']
-        }
-
-        return json.dumps(buildInfo, indent=4)
-
-
-
-    def outputBuildFiles(self, pageBuild, buildInfo):
-        if not os.path.exists(os.path.dirname(self.buildPath)):
-            os.makedirs(os.path.dirname(self.buildPath))
-        
-        with open(self.buildPath, "w", encoding="utf-8") as file:
-            file.write(pageBuild)
-
-        with open(self.buildInfoPath, "w", encoding="utf-8") as file:
-            file.write(buildInfo)
-
-
-
-    def getPageContent(self):
-        # Request_Handler Checks For Markdown File's Existence Beforehand
-        with open(self.markdownPath, "r") as file:
-            return frontmatter.load(file)
-
-
-
-
-class PageBuilderException(Exception):
-
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return self.message

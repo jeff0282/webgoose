@@ -1,28 +1,38 @@
 
-def created(content, args):
-    if args:
-        return f"Created Macro Called - Value {args[0]}"
-    
-    return "Created Macro Called With No Value"
+import os, importlib, datetime
+from webgoose import config
+util = importlib.import_module("webgoose.util")
+
+DATE_FORMAT = '%b %d %Y, %I:%M %p'
 
 
-def lastModified(content, args):
-    pass
-
-
-def version(content, args):
-    pass
-
-
-def tableOfContents(content, args):
-    pass
-
-
-def random(content, args):
+def lastModified(filePath, content, args):
     if len(args) > 0:
-        return ""
-    return "myballs"
+        if os.path.exists(args[0]):
+            filePath = util.getfilePath(args[0])
+            date = datetime.datetime.fromtimestamp(os.path.getmtime(filePath))
+            return date.strftime(DATE_FORMAT)
+        else: 
+            return ""
+    
+    date = datetime.datetime.fromtimestamp(os.path.getmtime(filePath))
+    return date.strftime(DATE_FORMAT)
 
 
-def builtUsing(content, args):
-    pass
+def version(filePath, content, args):
+    return "In Development"
+
+
+def tableOfContents(filePath, content, args):
+    return ""
+
+
+def random(filePath, content, args):
+    return ""
+
+
+def builtUsing(filePath, content, args):
+    return ""
+
+def docroot(filePath, content, args):
+    return config['SITE-OPTIONS']['doc-root']
