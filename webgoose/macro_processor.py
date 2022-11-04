@@ -12,7 +12,8 @@ class MacroProcessor(object):
                 "built_using":      macro.builtUsing}
 
 
-    def __init__(self, content):
+    def __init__(self, markdownPath, content):
+        self.markdownPath = markdownPath
         self.content = content
 
     
@@ -32,7 +33,7 @@ class MacroProcessor(object):
     def applyMacro(self, macro):
         command, args = self.splitMacro(macro.group(0))
         if command in self.MACROS.keys():
-            result = self.MACROS[command](self.content, args)
+            result = self.MACROS[command](self.markdownPath, self.content, args)
             return result
         
         return ""

@@ -4,7 +4,7 @@ from webgoose import project_root
 util = importlib.import_module('webgoose.util', "webgoose")
 
 
-def test_sanitizeURI():
+def test_validateURI():
     assert util.validateURI("^Dhg%$*&^%(!%$£)") == False
     assert util.validateURI("testint.page") == True
     assert util.validateURI("test^test.html") == True
@@ -13,13 +13,6 @@ def test_sanitizeURI():
     assert util.validateURI("/") == True
     assert util.validateURI("") == True 
     assert util.validateURI("//") == False
-
-
-def test_getPathFromProjectRoot():
-    assert util.getPathFromProjectRoot("/", "site", ".md") == "site/index.md"
-    assert util.getPathFromProjectRoot("", "site", ".md") == "site/index.md"
-    assert util.getPathFromProjectRoot("/pages/info/idk", "site", ".md") == "site/pages/info/idk.md"
-    assert util.getPathFromProjectRoot("/pages/examplepage", "build", ".json") == "build/pages/examplepage.json"
 
 
 def test_URIToRelativePath():
