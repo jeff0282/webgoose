@@ -1,6 +1,16 @@
 
-from webgoose.build_handler import BuildHandler
+import time
+from src.webgoose.file_traverser import FileTraverser
+from src.webgoose.page_builder import PageBuilder
 
-handler = BuildHandler()
-handler.buildAll()
+start = time.time()
+
+traverser = FileTraverser("source")
+builder = PageBuilder(traverser.get_all_md_files())
+builder.build_all()
+
+end = time.time()
+print(f"took {end - start} seconds")
+
+
 
