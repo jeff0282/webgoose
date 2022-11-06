@@ -28,8 +28,7 @@ def table_of_contents(filePath, content, args):
 
 
 def random(filePath, content, args):
-    print(args)
-    return "my balls lol"
+    return ""
 
 
 def time(filePath, content, args):

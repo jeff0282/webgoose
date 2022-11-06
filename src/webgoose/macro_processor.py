@@ -43,13 +43,13 @@ class MacroProcessor():
 
         # Use BeautifulSoup Parser To Convert HTML Entities To Normal Text
         # (convert to string as it's a BeautifulSoup object by default)
-        content = str(BeautifulSoup(self.content))
+        content = str(BeautifulSoup(self.content, "html.parser"))
         
         # Process All Macros On Page
         processed_content = self.__apply_macros(content)
 
-        # Macros Prefixed By A Hash Are To Be Ignored
-        # Remove Hash Prefix From Ignored Macros
+        # Macros Prefixed By A Hash Are To Be Ignored By The Processor
+        # After Processing, This Hash Prefix Can Be Safely Removed
         processed_content = processed_content.replace(self.IGNORE_MACRO_PREFIX+"{@", "{@")
 
         return processed_content

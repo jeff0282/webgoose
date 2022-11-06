@@ -1,3 +1,9 @@
+# WEBGOOSE SPECIFIC
+config/
+build/
+source/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
