@@ -37,7 +37,11 @@ class MacroProcessor():
 
     def process(self) -> str:
 
-        # Use BeautifulSoup Parser To Convert HTML Entities To Unicode
+        """
+        Processes and Applies Macros To Page, Handles Ignored Macros and HTML Entity Bullshit :3
+        """
+
+        # Use BeautifulSoup Parser To Convert HTML Entities To Normal Text
         # (convert to string as it's a BeautifulSoup object by default)
         content = str(BeautifulSoup(self.content))
         
@@ -55,8 +59,11 @@ class MacroProcessor():
 
     def __apply_macros(self, content: str) -> str:
 
-        # Compile Regex Pattern (Purely For Sake Of Keeping Code Tidy)
+        """
+        Finds and Replaces Macros With Their Respective Output By Way Of Regex
+        """
 
+        # Compile Regex Pattern (Purely For Sake Of Keeping Code Tidy)
         pattern = re.compile(r"(?<!"+self.IGNORE_MACRO_PREFIX+"){@([^@\n\r]+)@}")
 
         return re.sub(pattern, lambda match: self.__apply_single_macro(self.content, match), content)
@@ -68,6 +75,12 @@ class MacroProcessor():
 
     def __apply_single_macro(self, content: str, macro: str) -> str:
 
+        """
+        Checks Validity Of and Gets The Output Of A Single Macro
+
+        If Any Issue Occurs, It Just Spits Out The Empty String As The Macro Output
+        """
+
         # Get Macro Name And Arguments As Key Value Dictionary From Macro String
         command, arg_dict = self.__parse_macro(macro.group())
 
@@ -78,15 +91,28 @@ class MacroProcessor():
 
             return macro_result
             
-        else:
 
-            return ""
+        # If Macro Not Found, Return Empty String
+        return ""
 
 
 
 
     
     def __parse_macro(self, macro: str) -> Tuple[str, dict[str]]:
+
+        """
+        Parses Any Given Macro And Returns Its Name and Arguments
+
+        Formats Macros So That:
+
+            - {@ last_modified page=index.html format="%Y" @}
+
+        Becomes:
+
+            - Command: time
+            - Argument: {'page': 'index.html', 'format': '%Y'}
+        """
 
         # Remove Macro Delimeters {@ ... @}, Strip Any Outer Whitespace
         macro = macro[2:-2].strip()
