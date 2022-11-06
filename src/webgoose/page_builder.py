@@ -13,8 +13,6 @@ from src.webgoose.config import config
 from src.webgoose.macro_processor import MacroProcessor
 
 
-
-
 class PageBuilderException(Exception):
     pass
 

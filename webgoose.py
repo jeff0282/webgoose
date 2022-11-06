@@ -1,5 +1,6 @@
 
 import time
+
 from src.webgoose.file_traverser import FileTraverser
 from src.webgoose.page_builder import PageBuilder
 

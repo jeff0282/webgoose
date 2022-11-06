@@ -1,5 +1,7 @@
 
-import os, datetime
+import datetime
+import os
+
 from src.webgoose.config import config
 
 DATE_FORMAT = '%b %d %Y, %I:%M %p'

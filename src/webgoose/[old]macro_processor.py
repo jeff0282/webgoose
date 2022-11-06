@@ -1,5 +1,7 @@
 
-import importlib, re
+import importlib
+import re
+
 macro = importlib.import_module("webgoose.macros")
 
 class MacroProcessor(object):

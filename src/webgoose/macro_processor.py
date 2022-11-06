@@ -1,8 +1,10 @@
 
 import re
-from bs4 import BeautifulSoup
-from src.webgoose.config import config
 from typing import Tuple
+
+from bs4 import BeautifulSoup
+
+from src.webgoose.config import config
 from src.webgoose.macros import macros
 
 
@@ -79,7 +81,6 @@ class MacroProcessor():
         else:
 
             return ""
-
 
 
 
