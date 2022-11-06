@@ -10,6 +10,7 @@ from cmarkgfm.cmark import Options as cmarkgfmOptions
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from src.webgoose.config import config
+from src.webgoose.macro_processor import MacroProcessor
 
 
 
@@ -29,7 +30,10 @@ class PageBuilder():
 
     def build_all(self):
 
-        """Calls The Page Builder Method '__build()' For Every file_path In The List Passed To The Page Builder Object"""
+        """
+        Calls The Page Builder Method '__build()' For Every file_path 
+        In The List Passed To The Page Builder Object
+        """
 
         for page in self.to_build:
             self.__build(page)
@@ -52,9 +56,10 @@ class PageBuilder():
 
         page_build = self.render_template(metadata, content)
 
-        # awaiting macro support
+        post_processor = MacroProcessor(file_path, page_build)
+        final = post_processor.process()
 
-        self.write_build_to_file(build_path, page_build)
+        self.write_build_to_file(build_path, final)
 
 
 
@@ -64,7 +69,7 @@ class PageBuilder():
 
         """Work Out Build Path From Any Given Markdown Source Path"""
 
-        EXTENTION = ".html"
+        EXTENSION = ".html"
 
         # Replace Source Directory with Build Directory
         match_string = f"^{config['BUILD-OPTIONS']['source-dir']}"
@@ -79,9 +84,9 @@ class PageBuilder():
         # rindex() Returns -1 If No Occurence Found
         if last_period_index > 0:
 
-            return build_path[:last_period_index] + EXTENTION
+            return build_path[:last_period_index] + EXTENSION
 
-        return build_path + EXTENTION
+        return build_path + EXTENSION
 
 
 
@@ -102,7 +107,10 @@ class PageBuilder():
 
     def get_page_content(self, file_path: str) -> Tuple[dict[str, str], str]:
 
-        """Retrieves Markdown Content as 'str' and YAML Frontmatter as 'dict' From file_path Specified"""
+        """
+        Retrieves Markdown Content as 'str' and YAML Frontmatter as 'dict'
+        From file_path Specified
+        """
 
         with open(file_path, "r", encoding="utf-8") as file:
             data = frontmatter.load(file)

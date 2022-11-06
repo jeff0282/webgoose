@@ -6,7 +6,11 @@ from src.webgoose.page_builder import PageBuilder
 start = time.time()
 
 traverser = FileTraverser("source")
-builder = PageBuilder(traverser.get_all_md_files())
+
+_, pages_to_build = traverser.find_recursive(".md")
+
+builder = PageBuilder(pages_to_build)
+
 builder.build_all()
 
 end = time.time()

@@ -1,44 +1,113 @@
 
-import importlib, re
-macro = importlib.import_module("webgoose.macros")
-
-class MacroProcessor(object):
-
-    MACROS  =  {"last_modified":    macro.lastModified, 
-                "version":          macro.version,
-                "toc":              macro.tableOfContents,
-                "random":           macro.random,
-                "built_using":      macro.builtUsing,
-                "docroot":          macro.docroot}
+import re
+from bs4 import BeautifulSoup
+from src.webgoose.config import config
+from typing import Tuple
+from src.webgoose.macros import macros
 
 
-    def __init__(self):
-        pass
+class MacroProcessor():
+    
+    IGNORE_MACRO_PREFIX = "#"
+
+    MACROS = {
+
+        "last_modified":    macros.last_modified, 
+        "version":          macros.version,
+        "toc":              macros.table_of_contents,
+        "index":            macros.index,
+        "random":           macros.random,
+        "time":             macros.time,
+        "docroot":          macros.docroot
+
+    }
+
+
+
+    def __init__(self, file_path: str, content: str):
+        
+        self.file_path = file_path
+
+        self.content = content
+
+
+
+
+    def process(self) -> str:
+
+        # Use BeautifulSoup Parser To Convert HTML Entities To Unicode
+        # (convert to string as it's a BeautifulSoup object by default)
+        content = str(BeautifulSoup(self.content))
+        
+        # Process All Macros On Page
+        processed_content = self.__apply_macros(content)
+
+        # Macros Prefixed By A Hash Are To Be Ignored
+        # Remove Hash Prefix From Ignored Macros
+        processed_content = processed_content.replace(self.IGNORE_MACRO_PREFIX+"{@", "{@")
+
+        return processed_content
+
+
+
+
+    def __apply_macros(self, content: str) -> str:
+
+        # Compile Regex Pattern (Purely For Sake Of Keeping Code Tidy)
+
+        pattern = re.compile(r"(?<!"+self.IGNORE_MACRO_PREFIX+"){@([^@\n\r]+)@}")
+
+        return re.sub(pattern, lambda match: self.__apply_single_macro(self.content, match), content)
+
+
+
+
+
+
+    def __apply_single_macro(self, content: str, macro: str) -> str:
+
+        # Get Macro Name And Arguments As Key Value Dictionary From Macro String
+        command, arg_dict = self.__parse_macro(macro.group())
+
+        # Apply Macro If Present In The MACRO Dictionary, Otherwise Replace Macro With Empty String
+        if command in self.MACROS:
+
+            macro_result = self.MACROS[command](self.file_path, content, arg_dict)
+
+            return macro_result
+            
+        else:
+
+            return ""
+
+
+
+
 
     
-    def processMacros(self, filePath, content):
-        return re.sub(r"#?{@([^@\n\r]+)@}", lambda macro: self.applyMacro(filePath, content, macro), content)
+    def __parse_macro(self, macro: str) -> Tuple[str, dict[str]]:
 
-
-    def formatMacro(self, macro):
-        # Strip Delimeters '{@ @}' From Macro, Trim Resulting Whitespace
+        # Remove Macro Delimeters {@ ... @}, Strip Any Outer Whitespace
         macro = macro[2:-2].strip()
-        
-        command = re.match(r"^[^\s|\"]+", macro).group()
-        args = re.findall(r"\"([^\"]+)\"", macro)        
-        return command, args
 
-    
-    def applyMacro(self, filePath, content, macro):
-        macro = macro.group()
-        print(f"IDENTIFIED MACRO: {macro}")
+        # Extract Macro Name
+        command = re.match(r"^([^\s]+)", macro).group()
         
-        if macro[0] == "#":
-            print("^ ignoring")
-            return re.sub("@", "&#64;", macro)[1:]
-        command, args = self.formatMacro(macro)
-        if command in self.MACROS.keys():
-            return self.MACROS[command](filePath, content, args)
+        # Extract Argument Keywords & Values From Macro
+        arg_keywords = re.findall(r"(?<=\s)([^\s]+)(?=\=)", macro)
 
-        print(f"^ not a registered macro - removing from final markup")
-        return ""
+        arg_values = re.findall(r"(?<=\=\")([^\"]+)(?=\")", macro)
+
+        # Create Dictionary From Keyword and Value Lists, If Arguments Were Provided
+        # [NOTE] If List Lengths Are Mismatched, The Entire Entry (keyword: value) Will Be Ignored
+        if arg_keywords and arg_values:
+            
+            arg_dict = {key:value for (key, value) in zip(arg_keywords, arg_values)}
+            
+            return command, arg_dict 
+
+        return command, {}
+
+
+        
+

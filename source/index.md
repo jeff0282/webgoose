@@ -19,4 +19,4 @@ modifed @}
 <script src="/static/test.js"></script> 
 
 
-{@ function "argument1"@}
+{@ random argument1="some text" argument2="some more text" @}
