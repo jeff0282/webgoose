@@ -2,8 +2,6 @@
 import os
 from typing import List, Optional, Tuple
 
-from src.webgoose.config import config
-
 
 class FileTraverserException(Exception):
     pass
@@ -16,7 +14,9 @@ class DirectoryNotFoundException(FileTraverserException):
 
 
 
+
 class FileTraverser(object):
+
 
     def __init__(self, search_dir: str):
         self.search_dir = search_dir

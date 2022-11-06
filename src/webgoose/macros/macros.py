@@ -38,4 +38,4 @@ def index(file_path, content, args):
     pass
 
 def docroot(filePath, content, args):
-    return config['SITE-OPTIONS']['doc-root']
+    return config['site']['doc-root']

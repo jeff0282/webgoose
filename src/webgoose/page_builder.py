@@ -70,9 +70,9 @@ class PageBuilder():
         EXTENSION = ".html"
 
         # Replace Source Directory with Build Directory
-        match_string = f"^{config['BUILD-OPTIONS']['source-dir']}"
+        match_string = f"^{config['build']['source-dir']}"
 
-        repl_string = config["BUILD-OPTIONS"]["build-dir"]
+        repl_string = config["build"]["build-dir"]
 
         build_path = re.sub(match_string, repl_string, file_path)
 
@@ -181,7 +181,7 @@ class PageBuilder():
         # Set Template To Use To The Default Set In Config If Not Set
         if not "template" in metadata:
 
-            metadata["template"] = config["BUILD-OPTIONS"]["default-template"]
+            metadata["template"] = config["build"]["default-template"]
 
         return metadata
 
@@ -195,7 +195,7 @@ class PageBuilder():
 
         # Setup Jinja2 Environment
         jinja_env = Environment(
-            loader = FileSystemLoader(config["BUILD-OPTIONS"]["template-location"]),
+            loader = FileSystemLoader(config["build"]["template-location"]),
             autoescape = select_autoescape(
                 enabled_extensions = ("html", "xml"),
                 default_for_string = True

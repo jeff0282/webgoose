@@ -2,6 +2,7 @@
 config/
 build/
 source/
+template/
 
 
 # Byte-compiled / optimized / DLL files
