@@ -1,2 +1,0 @@
-
-from webgoose.request_handler import RequestHandler
