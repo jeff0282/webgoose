@@ -12,7 +12,7 @@ class MacroProcessor():
     
     IGNORE_MACRO_PREFIX = "#"
 
-    MACROS = {
+    GLOBAL_MACROS = {
 
         "last_modified":    macros.last_modified, 
         "version":          macros.version,
@@ -38,15 +38,11 @@ class MacroProcessor():
     def process(self) -> str:
 
         """
-        Processes and Applies Macros To Page, Handles Ignored Macros and HTML Entity Bullshit :3
+        Processes and Applies Macros To Page, Handles Ignored Macros
         """
-
-        # Use BeautifulSoup Parser To Convert HTML Entities To Normal Text
-        # (convert to string as it's a BeautifulSoup object by default)
-        content = str(BeautifulSoup(self.content, "html.parser"))
         
         # Process All Macros On Page
-        processed_content = self.__apply_macros(content)
+        processed_content = self.__apply_macros(self.content)
 
         # Macros Prefixed By A Hash Are To Be Ignored By The Processor
         # After Processing, This Hash Prefix Can Be Safely Removed
@@ -64,7 +60,7 @@ class MacroProcessor():
         """
 
         # Compile Regex Pattern (Purely For Sake Of Keeping Code Tidy)
-        pattern = re.compile(r"(?<!"+self.IGNORE_MACRO_PREFIX+"){@([^@\n\r]+)@}")
+        pattern = re.compile(r"(?<!"+self.IGNORE_MACRO_PREFIX+r"){@([^@\n\r]+)@}")
 
         return re.sub(pattern, lambda match: self.__apply_single_macro(self.content, match), content)
 
@@ -81,19 +77,25 @@ class MacroProcessor():
         If Any Issue Occurs, It Just Spits Out The Empty String As The Macro Output
         """
 
+        # Default Result For Macro Is To Replace Macro With Nothing, Only Return Proper Content If Macro Is Valid
+        macro_result = ""
+
         # Get Macro Name And Arguments As Key Value Dictionary From Macro String
         command, arg_dict = self.__parse_macro(macro.group())
 
-        # Apply Macro If Present In The MACRO Dictionary, Otherwise Replace Macro With Empty String
-        if command in self.MACROS:
+        # Apply Macro If Present In The Global Macro Dict or Specified In Config as Local Macro
+        if command in self.GLOBAL_MACROS:
 
-            macro_result = self.MACROS[command](self.file_path, content, arg_dict)
+            macro_result = self.GLOBAL_MACROS[command](self.file_path, content, arg_dict)
 
-            return macro_result
-            
+        elif command in config['macros']:
 
-        # If Macro Not Found, Return Empty String
-        return ""
+            macro_result = config['macros'][command]
+
+
+        # Macros Can Be Nested, So Necessary To Apply To Output
+        # !!! This Can Result In Recursion Depth Errors In Cases Of Infinite Nesting
+        return self.__apply_macros(macro_result)
 
 
 
@@ -113,6 +115,10 @@ class MacroProcessor():
             - Command: time
             - Argument: {'page': 'index.html', 'format': '%Y'}
         """
+
+        # Use BeautifulSoup Parser To Convert HTML Entities To Normal Text
+        # (convert to string as it's a BeautifulSoup object by default)
+        macro = str(BeautifulSoup(macro, "html.parser"))
 
         # Remove Macro Delimeters {@ ... @}, Strip Any Outer Whitespace
         macro = macro[2:-2].strip()

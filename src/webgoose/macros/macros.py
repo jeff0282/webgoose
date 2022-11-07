@@ -28,6 +28,7 @@ def table_of_contents(filePath, content, args):
 
 
 def random(filePath, content, args):
+    print(args)
     return ""
 
 
