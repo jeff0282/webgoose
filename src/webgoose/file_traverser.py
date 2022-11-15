@@ -30,7 +30,7 @@ class FileTraverser(object):
         Recursively Looks Through Directory and Subdirectories 
         for Folders and Files Matching The (Optional) Extention
 
-        Time Complexity: bad :(
+        Time Complexity: O(n^2) Probably.. (avoid if possible)
         """
 
         file_list = []
@@ -62,7 +62,7 @@ class FileTraverser(object):
         Finds All Files With Extension In The Directory Specified 
         When Instantiating PageTraverser Object 
 
-        Time Complexity: O(2n) ??
+        Time Complexity: O(n)
         """
 
         if os.path.exists(self.search_dir):
