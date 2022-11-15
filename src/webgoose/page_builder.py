@@ -10,18 +10,18 @@ from cmarkgfm.cmark import Options as cmarkgfmOptions
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from src.webgoose.config import config
-from src.webgoose.macro_processor import MacroProcessor
+from src.webgoose.macro.macro_processor import MacroProcessor
 
 
-class PageBuilderException(Exception):
-    pass
+
 
 
 class PageBuilder():
 
 
     def __init__(self, pages_to_build: List[str]):
-        self.to_build = pages_to_build
+
+        self.build_list = pages_to_build
 
 
 
@@ -33,31 +33,35 @@ class PageBuilder():
         In The List Passed To The Page Builder Object
         """
 
-        for page in self.to_build:
-            self.__build(page)
+        for file_path in self.build_list:
+            
+            page_build = self.__build_page(file_path)
+
+            build_path = self.get_build_path(file_path)
+
+            self.write_build_to_file(build_path, page_build)
 
 
 
 
 
-    def __build(self, file_path: str):
+
+    def __build_page(self, file_path: str):
 
         """Main Function To Build An Individual Page"""
 
-        build_path = self.get_build_path(file_path)
-
         metadata, content = self.get_page_content(file_path)
+        
+        metadata = self.add_missing_metadata(file_path, metadata)
 
-        content = self.convert_content_to_markup(content)
+        template = self.get_template(metadata['template'])
 
-        metadata = self.add_missing_metadata(build_path, metadata, content)
+        template, content = self.process_macros(file_path, template, content)
 
-        page_build = self.render_template(metadata, content)
+        content = self.conv_markdown_html(content)
 
-        post_processor = MacroProcessor(file_path, page_build)
-        final = post_processor.process()
+        return self.render_template(template, metadata, content)
 
-        self.write_build_to_file(build_path, final)
 
 
 
@@ -90,6 +94,7 @@ class PageBuilder():
 
 
 
+
     def get_filename_from_path(self, file_path: str) -> str:
 
         """Gets Filename From Any Given Path"""
@@ -98,6 +103,7 @@ class PageBuilder():
 
         # Return Substring After Last Slash If Present, Else Returns Path
         return file_path[:last_slash_index] if last_slash_index > 0 else file_path
+
 
 
 
@@ -114,6 +120,7 @@ class PageBuilder():
             data = frontmatter.load(file)
 
         return data.metadata, data.content
+
 
 
 
@@ -138,45 +145,51 @@ class PageBuilder():
 
 
 
-    def convert_content_to_markup(self, content: str) -> str:
 
-        """Converts Markdown Documents (GitHub Flavoured) To HTML Markup"""
+    def process_macros(self, file_path, template, content):
 
-        options = cmarkgfmOptions.CMARK_OPT_UNSAFE
+        # Process Macros On Page Content
+        pre_processor = MacroProcessor(file_path, content)
+        
+        content = pre_processor.process()
 
-        return cmarkgfm.github_flavored_markdown_to_html(content, options)
+        
+        # Process Macros On Template, Using Content As Reference
+        pre_processor = MacroProcessor(file_path, template, content)
+
+        template = pre_processor.process()
+
+
+        return template, content 
 
 
 
 
 
-    def add_missing_metadata(self, build_path: str, metadata: Dict[str, str], content: str) -> Dict[str, str]:
+    def conv_markdown_html(self, content: str) -> str:
+
+        """
+        Converts Markdown Documents (GitHub Flavoured) To HTML Markup
+        """
+
+        # Convert Markdown to HTML, Use Safe Formatting To Avoid Injection/XSS Issues
+        cmark_options = cmarkgfmOptions.CMARK_OPT_UNSAFE
+
+        return cmarkgfm.github_flavored_markdown_to_html(content, cmark_options)
+
+
+
+
+
+    def add_missing_metadata(self, build_path: str, metadata: Dict[str, str]) -> Dict[str, str]:
 
         """Uses Content & Filename Of Page To Add Any Missing Metadata To Page"""
 
-        soup = BeautifulSoup(content, "html.parser")
-
-        # Set Title As Either Value Of First 'h1' Tag or Filename (Last Resort) If Not Present
+        # Set Title As Filename If Not Present In Metadata
         if not "title" in metadata:
 
-            title = soup.find("h1")
+            metadata["title"] = self.get_filename_from_path(build_path)
 
-            if title:
-
-                metadata["title"] = title.string
-
-            else:
-
-                metadata["title"] = self.get_filename_from_path(build_path)
-
-        # Set Description To Value Of First 'p' Element If Not Present
-        if not "description" in metadata:
-
-            first_para = soup.find("p")
-
-            if first_para:
-
-                metadata["description"] = first_para.string[:80]
 
         # Set Template To Use To The Default Set In Config If Not Set
         if not "template" in metadata:
@@ -189,26 +202,37 @@ class PageBuilder():
 
 
 
-    def render_template(self, metadata: Dict[str, str], content: str) -> str:
+    def get_template(self, template_name):
+
+        if os.path.exists(f"template/{template_name}"):
+
+            with open(f"template/{template_name}", 'r', encoding='utf-8') as file:
+                
+                return file.read()
+
+        else:
+
+            return False
+
+
+
+
+
+    def render_template(self, template, metadata: Dict[str, str], content: str) -> str:
 
         """Insert Page Content Onto HTML Template And Renders Full HTML Document"""
 
         # Setup Jinja2 Environment
         jinja_env = Environment(
-            loader = FileSystemLoader(config["build"]["template-location"]),
-            autoescape = select_autoescape(
-                enabled_extensions = ("html", "xml"),
-                default_for_string = True
-            ),
+            loader=FileSystemLoader("template")
         )
 
         # Replace All Modulo Symbols With HTML Entity To Prevent Conflicts With Jinja2 Template Tags
         content = content.replace("%", "&#37;")
 
-        # Wrap Page Content With Jinja2 Templating Tags, Create Template Object
-        page_body = ("{% extends '" + metadata["template"] + "' %} {% block content %}" + content + "{% endblock %}")
+        # Create Template Object From Template String
+        template = jinja_env.from_string(template)
 
-        template = jinja_env.from_string(page_body)
-
-        # Render Page, Pass Metadata Dict To Jinja2
-        return template.render({"meta": metadata})
+        # Render Page, Pass Metadata Dict To Jinja2, Process Macros On Template
+        full_page = template.render({"meta": metadata, "content": content})
+        return full_page

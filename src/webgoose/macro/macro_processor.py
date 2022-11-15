@@ -1,16 +1,17 @@
 
 import re
-from typing import Tuple
+from typing import Optional, Tuple
 
 from bs4 import BeautifulSoup
 
 from src.webgoose.config import config
-from src.webgoose.macros import macros
+from src.webgoose.macro import macros
 
 
 class MacroProcessor():
     
-    IGNORE_MACRO_PREFIX = "#"
+
+    IGNORE_MACRO_PREFIX = r"\/\/"
 
     GLOBAL_MACROS = {
 
@@ -26,11 +27,27 @@ class MacroProcessor():
 
 
 
-    def __init__(self, file_path: str, content: str):
+    def __init__(self, file_path: str, content: str, reference: Optional[str] = False):
+
+        """
+        Takes:
+        - a filepath    ->  necessary for macros that need access to original file info
+
+        - content       ->  the content containing the macros to be processed
+
+        - reference     ->  an optional argument if the macro processor should use another piece of 
+                            content to reference values from (useful for processing macros on templates, 
+                            allows use of page content instead of template to reference values 
+                            (e.g. table of contents)).
+
+        """
         
         self.file_path = file_path
 
         self.content = content
+
+        self.reference = reference if reference else self.content
+
 
 
 
@@ -38,22 +55,19 @@ class MacroProcessor():
     def process(self) -> str:
 
         """
-        Processes and Applies Macros To Page, Handles Ignored Macros
+        Applies Macros To Page (through __apply_macros)
         """
         
         # Process All Macros On Page
         processed_content = self.__apply_macros(self.content)
-
-        # Macros Prefixed By A Hash Are To Be Ignored By The Processor
-        # After Processing, This Hash Prefix Can Be Safely Removed
-        processed_content = processed_content.replace(self.IGNORE_MACRO_PREFIX+"{@", "{@")
 
         return processed_content
 
 
 
 
-    def __apply_macros(self, content: str) -> str:
+
+    def __apply_macros(self, content) -> str:
 
         """
         Finds and Replaces Macros With Their Respective Output By Way Of Regex
@@ -62,14 +76,14 @@ class MacroProcessor():
         # Compile Regex Pattern (Purely For Sake Of Keeping Code Tidy)
         pattern = re.compile(r"(?<!"+self.IGNORE_MACRO_PREFIX+r"){@([^@\n\r]+)@}")
 
-        return re.sub(pattern, lambda match: self.__apply_single_macro(self.content, match), content)
+        return re.sub(pattern, self.__apply_single_macro, content)
 
 
 
 
 
 
-    def __apply_single_macro(self, content: str, macro: str) -> str:
+    def __apply_single_macro(self, macro: str) -> str:
 
         """
         Checks Validity Of and Gets The Output Of A Single Macro
@@ -77,7 +91,8 @@ class MacroProcessor():
         If Any Issue Occurs, It Just Spits Out The Empty String As The Macro Output
         """
 
-        # Default Result For Macro Is To Replace Macro With Nothing, Only Return Proper Content If Macro Is Valid
+        # Default Result For Macro Is To Replace Macro With Nothing
+        # Only Return Proper Content If Macro Is Valid
         macro_result = ""
 
         # Get Macro Name And Arguments As Key Value Dictionary From Macro String
@@ -86,7 +101,7 @@ class MacroProcessor():
         # Apply Macro If Present In The Global Macro Dict or Specified In Config as Local Macro
         if command in self.GLOBAL_MACROS:
 
-            macro_result = self.GLOBAL_MACROS[command](self.file_path, content, arg_dict)
+            macro_result = self.GLOBAL_MACROS[command](self.file_path, self.reference, arg_dict)
 
         elif command in config['macros']:
 
