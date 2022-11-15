@@ -67,7 +67,7 @@ class FileTraverser(object):
 
         if os.path.exists(self.search_dir):
             
-            file_list = [x for x in os.listdir(self.search_dir) if os.path.isfile(x) and x.endswith(extension)]
+            file_list = [x for x in os.listdir(self.search_dir) if os.path.isfile(os.path.join(self.search_dir, x)) and x.endswith(extension)]
             
             dir_list = [x for x in os.listdir(self.search_dir) if os.path.isdir(x)]
 

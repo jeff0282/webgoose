@@ -7,10 +7,10 @@ import cmarkgfm
 import frontmatter
 from bs4 import BeautifulSoup
 from cmarkgfm.cmark import Options as cmarkgfmOptions
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader
 
 from src.webgoose.config import config
-from src.webgoose.macro.macro_processor import MacroProcessor
+from src.webgoose.macro_processor import MacroProcessor
 
 
 

@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 from bs4 import BeautifulSoup
 
 from src.webgoose.config import config
-from src.webgoose.macro import macros
+from src.webgoose import macros
 
 
 class MacroProcessor():
@@ -16,11 +16,10 @@ class MacroProcessor():
     GLOBAL_MACROS = {
 
         "last_modified":    macros.last_modified, 
-        "version":          macros.version,
+        "version":          macros.get_version,
         "toc":              macros.table_of_contents,
         "index":            macros.index,
-        "random":           macros.random,
-        "time":             macros.time,
+        "time":             macros.get_time,
         "docroot":          macros.docroot
 
     }
