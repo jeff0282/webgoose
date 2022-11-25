@@ -7,64 +7,49 @@ from src.webgoose import version as webgoose_version
 from src.webgoose.config import config
 from src.webgoose.file_traverser import FileTraverser
 
-
-
 DATE_FORMAT = '%b %d %Y, %I:%M%p'
 
 
 
-def last_modified(page_dict, content, args):
-
-    path = page_dict['build_path']
+def last_modified(page, content, args):
 
     date_format = args['format'] if "format" in args else DATE_FORMAT
 
     # Return Last Build Time If Available
     # Otherwise, return current time (assume page source exists but later in build queue)
-    if os.path.exists(path):
+    if os.path.exists(page.build_path):
 
-        last_mod = datetime.fromtimestamp(os.path.getmtime(path))
+        last_mod = datetime.fromtimestamp(os.path.getmtime(page.build_path))
 
         return last_mod.strftime(DATE_FORMAT)
 
     
-    return time.time()
+    return time.strftime(DATE_FORMAT, time.localtime())
 
 
 
 
 
 
-def get_version(page_dict, content, args):
+def get_version(page, content, args):
     return webgoose_version
 
 
 
 
-def table_of_contents(page_dict, content, args):
+def table_of_contents(page, content, args):
     return ""
 
 
 
 
-def get_time(page_dict, content, args):
-    
-    format = args['format'] if "format" in args else DATE_FORMAT
+def index(page, content, args):
 
-    return time.strftime(format)
+    search_dir = os.path.dirname(page.source_path)
 
-
-
-
-def index(page_dict, content, args):
-
-    traverser = FileTraverser(os.path.dirname(page_dict['source_path']))
+    traverser = FileTraverser(search_dir)
 
     _ , pages = traverser.find(".md")
-
-    if not "include_current" in args:
-
-        pages.remove(page_dict['filename'])
 
 
     index_list = list(map(lambda x: f"<li>{x}</li>", pages))
@@ -73,5 +58,6 @@ def index(page_dict, content, args):
 
 
 
-def docroot(page_dict, content, args):
-    return os.path.join(config['site']['doc-root'], config['build']['build-dir'])
+def docroot(page, content, args):
+
+    return config['site']['doc-root']
