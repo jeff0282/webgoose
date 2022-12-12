@@ -6,6 +6,9 @@ from typing import Tuple
 
 from webgoose import config
 from webgoose.structs import PageInfo
+from webgoose.structs import WGFile
+
+
 
 
 class PageQuerierException(WebgooseException):
@@ -25,19 +28,19 @@ class PageQuerier:
     """
 
 
-    def __init__(self, source_path: str):
+    def __init__(self, wgfile_object: WGFile):
 
         """
-        Instantiates An Instance of the PageQuerier Class With A Page Location
+        Instantiates An Instance of the PageQuerier Class With A WGFile Object
         """
 
-        self.__source_path = source_path
+        self.__file = wgfile_object
 
 
 
     @property
-    def source_path(self) -> str:
-        return self.__source_path
+    def file(self) -> str:
+        return self.__file
 
 
 
@@ -65,15 +68,12 @@ class PageQuerier:
             # Get Raw Template As String
             template = self._get_template(metadata['template'])
 
-            # Get Last Modified Date As Epoch Timestamp
-            last_mod_time = os.path.getmtime(self.source_path)
-
-            # Create and Return A PageInfo Object Containing All Of The Gathered Info
-            return PageInfo(self.source_path, build_path, last_mod_time, metadata, template, content)
+            # Create and Return A PageInfo Object Containing All Of The Gathered Info + WGFile Info
+            return PageInfo(self.file.path, build_path, self.file.basename, self.file.extension, self.file.last_mod, metadata, template, content)
 
         else:
 
-            raise PageGrabberException(f"The Page '{self.source_path}' Doesn't Exist or is Otherwise Inaccessable")
+            raise PageQuerierException(f"The Page '{self.file.path}' Doesn't Exist or is Otherwise Inaccessable")
 
 
 
@@ -83,7 +83,7 @@ class PageQuerier:
         Returns Boolean Of Whether A Path Exists and is a File
         """
 
-        return os.path.isfile(self.source_path):
+        return os.path.isfile(self.file.path):
 
 
 
@@ -98,7 +98,7 @@ class PageQuerier:
 
         # Replace Source Dir In Source Path With Build Dir
         # (Preserves Directory Structure In Build Dir)
-        build_path = re.sub(f"^{source_dir}", build_dir, self.source_path)
+        build_path = re.sub(f"^{source_dir}", build_dir, self.file.path)
 
         # Change File Extension To Build Extension
         return re.sub(r"\.[\w]+$", BUILD_EXTENSION, build_path)
@@ -122,7 +122,7 @@ class PageQuerier:
         except:
 
             # Raise A More Useful Exception Than FileNotFoundException
-            raise PageGrabberException(f"The Template File '{template_path}', Used By Page '{self.source_path}' Either Doesn't Exist or is Otherwise Inaccessable")
+            raise PageGrabberException(f"The Template File '{template_path}', Used By Page '{self.file.path}' Either Doesn't Exist or is Otherwise Inaccessable")
         
 
 
@@ -136,7 +136,7 @@ class PageQuerier:
         """
 
         # Open File as UTF-8 Encoded Text File, Split YAML Frontmatter From Content 
-        with open(self.source_path, "r", encoding="utf-8") as source:
+        with open(self.file.path, "r", encoding="utf-8") as source:
             raw_content = frontmatter.load(source)
 
         # Set Default Values If Metadata or Content Otherwise Blank
@@ -161,7 +161,7 @@ class PageQuerier:
         if not "title" in metadata:
 
             # If No Title, Replace With Filename
-            metadata['title'] = os.path.basename(self.source_path)
+            metadata['title'] = self.file.basename
 
 
         # Add Title Suffix To Title (add space between)
