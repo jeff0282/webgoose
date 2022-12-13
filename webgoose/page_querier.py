@@ -1,13 +1,21 @@
 
 import frontmatter
+import os
 import re
 
-from typing import Tuple
+from typing import Tuple, Optional
 
 from webgoose import config
+from webgoose import WebgooseException
+from webgoose.base_page_querier import BasePageQuerier
 from webgoose.structs import PageInfo
 from webgoose.structs import WGFile
 
+
+#
+# Constant 
+#
+BUILD_EXTENSION = ".html"
 
 
 
@@ -17,14 +25,14 @@ class PageQuerierException(WebgooseException):
 
 
 
-class PageQuerier:
+class PageQuerier(BasePageQuerier):
 
     """
     PageQuerier
 
     A Class To Facillitate Gathering Of Information About Pages, When Provided A WGFile Object
 
-    NOTE: It is assumed that the WGFile Instance Passed Upon Initialisation Is A Valid Markdown File
+    NOTE: It is assumed that the WGFile Instance Passed Upon Initialisation Is For A Valid Markdown File
     """
 
 
@@ -55,21 +63,21 @@ class PageQuerier:
         if self.page_exists():
 
             # Get Raw Metadata and Content From Source File
-            metadata, content = self._get_source_content()
+            metadata, content = self.get_source_content()
 
             # Fill In Missing Metadata
             # (Adds Missing Info Like Title with Filename, Template with Default Path From Template, etc)
-            metadata = self._add_missing_metadata()
+            metadata = self.add_missing_metadata()
 
             # Get Build Path 
             # (Uses Source Path and Root Build Path from Config)
-            build_path = self._get_build_path()
+            build_path = self.get_build_path()
 
             # Get Raw Template As String
-            template = self._get_template(metadata['template'])
+            template = self.get_template(metadata['template'])
 
             # Create and Return A PageInfo Object Containing All Of The Gathered Info + WGFile Info
-            return PageInfo(self.file.path, build_path, self.file.basename, self.file.extension, self.file.last_mod, metadata, template, content)
+            return PageInfo(self.file.path, build_path, self.file.basename, BUILD_EXTENSION, self.file.last_mod, metadata, template, content)
 
         else:
 
@@ -83,29 +91,37 @@ class PageQuerier:
         Returns Boolean Of Whether A Path Exists and is a File
         """
 
-        return os.path.isfile(self.file.path):
+        return os.path.isfile(self.file.path)
 
 
 
-    def _get_build_path(self) -> str:
+    def get_build_path(self) -> str:
 
-        """ Gets Build Path of Page Using Source Path as a Base """
+        """ 
+        # THROWS EXCEPTION IF SOURCE_PATH DOESN'T CONTAIN SOURCE_DIR #
 
-        BUILD_EXTENSION = ".html"
+        Gets Build Path of Page Using Source Path as a Base
+
+        Uses The BasePageQuerier's `_get_build_path()` To Do The Actual Conversion
+        """
 
         source_dir = config['build']['source-dir']
         build_dir = config['build']['build-dir']
 
-        # Replace Source Dir In Source Path With Build Dir
-        # (Preserves Directory Structure In Build Dir)
-        build_path = re.sub(f"^{source_dir}", build_dir, self.file.path)
+        build_path = self._get_build_path(source_dir, build_dir, self.file.path, BUILD_EXTENSION)
 
-        # Change File Extension To Build Extension
-        return re.sub(r"\.[\w]+$", BUILD_EXTENSION, build_path)
+        # Check If Build_Path is False (source_path doesn't contain source_dir)
+        if build_path:
+
+            return build_path
+
+        else:
+
+            raise PageQuerierException(f"The Source File With Path '{self.file.path}' is NOT in Source Dir '{source_dir}'")
 
 
 
-    def _get_template(self, template_path: str) -> str:
+    def get_template(self, template_path: str) -> str:
 
         """
         # THROWS AN EXCEPTION IF TEMPLATE FILE NOT FOUND #
@@ -113,20 +129,21 @@ class PageQuerier:
         Gets Template File as String Using Path Provided
         """
 
-        # Open Template Fole as UTF-8 Encoded Text File
-        try:
+        # Get Template Using BasePageQuerier Method
+        template = self._get_template(template_path)
 
-            with open(template_path, "r", encoding="utf-8") as template:
-                return template.read()
+        # Check If _get_template() Returned False, Throw Exception
+        if template:
 
-        except:
+            return template
 
-            # Raise A More Useful Exception Than FileNotFoundException
-            raise PageGrabberException(f"The Template File '{template_path}', Used By Page '{self.file.path}' Either Doesn't Exist or is Otherwise Inaccessable")
+        else:
+        
+            raise PageQuerierException(f"The Template File '{template_path}', Used By Page '{self.file.path}' Either Doesn't Exist or is Otherwise Inaccessable")
         
 
 
-    def _get_source_content(self) -> Tuple[dict[str, str], str]:
+    def get_source(self) -> Tuple[dict[str, str], str]:
 
         """
         # WILL THROW EXCEPTION IF SOURCE FILE DOESN'T EXIST #
@@ -135,42 +152,35 @@ class PageQuerier:
         Returns Tuple (metadata, content)
         """
 
-        # Open File as UTF-8 Encoded Text File, Split YAML Frontmatter From Content 
-        with open(self.file.path, "r", encoding="utf-8") as source:
-            raw_content = frontmatter.load(source)
+        # Get Source Using BasePageQuerier
+        source = self._get_source(self.file.path)
 
-        # Set Default Values If Metadata or Content Otherwise Blank
-        metadata = raw_content.metadata if raw_content.metadata else {}
-        content = raw_content.content if raw_content.content else ""
+        # Check If BasePageQuerier Returned False
+        if source:
 
-        return metadata, content
+            return metadata, content
+
+        else:
+
+            raise PageQuerierException(f"The Source File For The Page'{self.file.path} Either Doesn't Exist or Is Inaccessable")
 
 
 
-    def _add_missing_metadata(self, metadata: dict[str, str]) -> dict[str, str]:
+    def add_missing_metadata(self, metadata: dict[str, str]) -> dict[str, str]:
 
         """ 
-        Fills In Missing Metadata Using Source File Informatation and Defaults
+        Fills In Missing Metadata Using Source File Informatation, config, and Defaults
         """
 
         # Get Default Values, etc From Config
         default_template = config['build']['default-template']
         title_suffix = config['site']['title-suffix']
+        
+        # Populate Dict To Be Passed To BasePageQuerier Method
+        default_values = {'title': self.file.basename, 'template': default_template}
+        metadata = self._add_default_metadata(metadata, default_values)
 
-        # Add Title Metadata 
-        if not "title" in metadata:
-
-            # If No Title, Replace With Filename
-            metadata['title'] = self.file.basename
-
-
-        # Add Title Suffix To Title (add space between)
-        metadata['title'] += " " + title_suffix
-
-        # If No Template Specified, Choose Default
-        if not "template-path" in metadata:
-
-            metadata['template-path'] = default_template
-
+        # Add Title Suffix To Title
+        metadata['title'] = f"{metadata['title']} {title_suffix}"
 
         return metadata

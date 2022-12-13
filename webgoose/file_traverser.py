@@ -6,7 +6,7 @@ from webgoose import WebgooseException
 
 
 class FileTraverserException(WebgooseException):
-    def __init__(self, message: Optional[str] = "Error Opening Directory")
+    def __init__(self, message: Optional[str] = "Error Opening Directory"):
         super().__init__("FileTraverserException", message)
 
 

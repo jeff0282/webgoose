@@ -2,7 +2,7 @@
 import os
 import time
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from webgoose import config
 from webgoose import FileTraverser
@@ -48,12 +48,12 @@ class SiteQuerier:
 
 
 
-    def get_all_files(self) -> List[WGFIle]:
+    def get_all_files(self) -> List[WGFile]:
 
         """
         Gets All Files From Source Directory Using Private Method __get_all_files()
 
-        Returns A List Of WGFiles With Files Attributes
+        Returns A List Of WGFiles With File Attributes
         """
 
         # Get List Of All File Paths In Source Directory
@@ -73,14 +73,14 @@ class SiteQuerier:
             last_mod = os.path.getmtime(file_path)
 
             # Put File Info into a WGFile Object and Add To File List
-            file = WGFIle(file_path, basename, ext, last_mod)
+            file = WGFile(file_path, basename, ext, last_mod)
             files.append(file)
 
         return files
 
 
 
-    def seperate_pages_from_static_files(self, files_list: WGFile) -> Tuple[List[WGFIle], List[WGFIle]]:
+    def seperate_pages_from_static_files(self, files_list: WGFile) -> Tuple[List[WGFile], List[WGFile]]:
 
         """
         Takes A List Of WGFile Objects, and Returns Two Sublist Containing Those That Are Source Pages, And Those That Aren't (Static Files)
@@ -93,7 +93,7 @@ class SiteQuerier:
         PAGE_EXT = ".md"
 
         # Seperate WGFile Objects Into Pages, Static_Files Lists Depending On Whether or Not The File Extension Is PAGE_EXT
-        pages, static_files = [file for files in files_list if file.ext.lower() = PAGE_EXT] , [file for files in files_list if file.ext.lower() != PAGE_EXT] 
+        pages, static_files = [file for files in files_list if file.ext.lower() == PAGE_EXT] , [file for files in files_list if file.ext.lower() != PAGE_EXT] 
 
         return pages, static_files
 

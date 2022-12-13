@@ -9,6 +9,10 @@ from .version import version_info
 from .config import config
 
 
+# BASE EXCEPTION CLASS
+from .webgoose_exception import WebgooseException
+
+
 # FILE TRAVERSER
 from .file_traverser import FileTraverser
 
@@ -16,8 +20,4 @@ from .file_traverser import FileTraverser
 # GRABBERS
 from .site_querier import SiteQuerier 
 from .page_querier import PageQuerier 
-
-
-# BASE EXCEPTION CLASS
-from .webgoose_exception import WebgooseException
 

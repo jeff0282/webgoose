@@ -1,12 +1,12 @@
 
-from typing import List
+from typing import Dict, List
 
 from webgoose.structs import WGFile
 
 
 class SiteInfo:
 
-    def __init__(self, time: float, site_config: Dict[str, str], all_files: List[WGFIle], 
+    def __init__(self, time: float, site_config: Dict[str, str], all_files: List[WGFile], 
                 pages: List[WGFile], static_files: List[WGFile]):
         
         """
