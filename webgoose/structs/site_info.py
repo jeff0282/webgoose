@@ -18,7 +18,7 @@ class SiteInfo:
         self.__config = site_config
 
         # File Lists (Lists of WGFile Objects)
-        self.__all_files = source_files
+        self.__all_files = all_files
         self.__pages = pages
         self.__static_files = static_files
 

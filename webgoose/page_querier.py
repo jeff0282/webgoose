@@ -1,7 +1,5 @@
 
-import frontmatter
 import os
-import re
 
 from typing import Tuple, Optional
 
@@ -63,11 +61,11 @@ class PageQuerier(BasePageQuerier):
         if self.page_exists():
 
             # Get Raw Metadata and Content From Source File
-            metadata, content = self.get_source_content()
+            metadata, content = self.get_source()
 
             # Fill In Missing Metadata
             # (Adds Missing Info Like Title with Filename, Template with Default Path From Template, etc)
-            metadata = self.add_missing_metadata()
+            metadata = self.add_missing_metadata(metadata)
 
             # Get Build Path 
             # (Uses Source Path and Root Build Path from Config)
@@ -129,6 +127,12 @@ class PageQuerier(BasePageQuerier):
         Gets Template File as String Using Path Provided
         """
 
+        # Get Template Dir from Config, Concatenate It To Relative TemplatePath
+        # (Strips '/' From Start Of 'template_path' If Present To Prevent 'os.path.join()' Issues)
+        template_dir = config['build']['template-dir']
+        template_path = template_path[1:] if template_path[0] == "/" else template_path
+        template_path = os.path.join(template_dir, template_path)
+
         # Get Template Using BasePageQuerier Method
         template = self._get_template(template_path)
 
@@ -153,12 +157,13 @@ class PageQuerier(BasePageQuerier):
         """
 
         # Get Source Using BasePageQuerier
+        # _get_source() Returns The Tuple (metadata, content) or False on failure
         source = self._get_source(self.file.path)
 
         # Check If BasePageQuerier Returned False
         if source:
-
-            return metadata, content
+            
+            return source[0], source[1]
 
         else:
 

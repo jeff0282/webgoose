@@ -23,7 +23,7 @@ class PageInfo:
         self.__build_path = build_path
         self.__basename = basename
         self.__ext = ext
-        self.__last_mod = last_mod_time
+        self.__last_mod = last_mod
         
         # Source File Contents
         self.__metadata = metadata

@@ -28,3 +28,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 """
+
+
+import time
+
+from webgoose import SiteQuerier
+from webgoose import PageQuerier
+
+
+def build_pages():
+
+    site = SiteQuerier(time.time()).get_site_info()
+
+    page_aggr = []
+    for page_obj in site.pages:
+        page = PageQuerier(page_obj)
+        page_aggr.append(page.get_page_info())
+
+    print([x.build_path for x in page_aggr])
+    print([x.path for x in site.static_files])
+
+
+
+
+if __name__ == "__main__":
+    build_pages()

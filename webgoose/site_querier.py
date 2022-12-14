@@ -31,7 +31,7 @@ class SiteQuerier:
 
         pages, static_files = self.seperate_pages_from_static_files(all_files)
 
-        return SiteInfo(self, time, config, all_files, pages, static_files)
+        return SiteInfo(self.time, config, all_files, pages, static_files)
 
 
 
@@ -93,7 +93,7 @@ class SiteQuerier:
         PAGE_EXT = ".md"
 
         # Seperate WGFile Objects Into Pages, Static_Files Lists Depending On Whether or Not The File Extension Is PAGE_EXT
-        pages, static_files = [file for files in files_list if file.ext.lower() == PAGE_EXT] , [file for files in files_list if file.ext.lower() != PAGE_EXT] 
+        pages, static_files = [file for file in files_list if file.ext.lower() == PAGE_EXT] , [file for file in files_list if file.ext.lower() != PAGE_EXT] 
 
         return pages, static_files
 

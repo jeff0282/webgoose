@@ -1,6 +1,7 @@
 
 import configparser
 
+
 # Relative Location From CWD
 DEFAULT_CONFIG_LOCATION = ".config/config.ini"
 

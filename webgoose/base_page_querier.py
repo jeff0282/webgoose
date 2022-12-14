@@ -1,4 +1,5 @@
 
+import frontmatter
 import os
 import re
 
@@ -57,9 +58,6 @@ class BasePageQuerier:
         Returns 'False' If SourceDir is not within SourcePath
         """
 
-        print(source_dir)
-        print(source_path)
-
         # Test Whether SourceDir is a prefix of SourcePath
         if os.path.commonprefix([source_dir, source_path]) != source_dir:
             return False
@@ -95,7 +93,7 @@ class BasePageQuerier:
 
             return "{{content}}"
 
-        # If Not "Null" Check If File Exists
+        # If Not "None" Check If File Exists
         elif os.path.isfile(template_path):
 
             with open(template_path, "r", encoding="utf-8") as template:
@@ -120,7 +118,8 @@ class BasePageQuerier:
 
             # Open File as UTF-8 Encoded Text File, Split YAML Frontmatter From Content 
             with open(source_path, "r", encoding="utf-8") as source:
-                return frontmatter.load(source)
+                raw_source = frontmatter.load(source)
+                return raw_source.metadata, raw_source.content
 
         else:
 
