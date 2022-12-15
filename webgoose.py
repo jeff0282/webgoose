@@ -47,6 +47,8 @@ def build_pages():
 
     print([x.build_path for x in page_aggr])
     print([x.path for x in site.static_files])
+    print(f"timestamp: {site.time}")
+    print(f'source-dir: {site.config.__dict__}')
 
 
 

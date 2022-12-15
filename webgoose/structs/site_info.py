@@ -1,12 +1,13 @@
 
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from webgoose.structs import WGFile
+from webgoose.structs import DictAttr
 
 
 class SiteInfo:
 
-    def __init__(self, time: float, site_config: Dict[str, str], all_files: List[WGFile], 
+    def __init__(self, time: float, site_config: Dict[str, Any], all_files: List[WGFile], 
                 pages: List[WGFile], static_files: List[WGFile]):
         
         """
@@ -15,7 +16,7 @@ class SiteInfo:
 
         # Timestamp Of Build Start and Config Dict
         self.__time = time
-        self.__config = site_config
+        self.__config = DictAttr(site_config)
 
         # File Lists (Lists of WGFile Objects)
         self.__all_files = all_files
@@ -29,7 +30,7 @@ class SiteInfo:
         return self.__time
 
     @property
-    def config(self) -> Dict[str, str]:
+    def config(self) -> DictAttr:
         return self.__config
 
     @property

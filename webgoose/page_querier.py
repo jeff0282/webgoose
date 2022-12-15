@@ -82,11 +82,13 @@ class PageQuerier(BasePageQuerier):
             raise PageQuerierException(f"The Page '{self.file.path}' Doesn't Exist or is Otherwise Inaccessable")
 
 
-
+    
     def page_exists(self) -> bool:
 
         """
-        Returns Boolean Of Whether A Path Exists and is a File
+        Returns Boolean Of Whether Page Exists Or Not
+
+        The Definition of a Valid Page May Be Expanded Upon In Future, Hence Exists A Dedicated Method
         """
 
         return os.path.isfile(self.file.path)
@@ -103,10 +105,10 @@ class PageQuerier(BasePageQuerier):
         Uses The BasePageQuerier's `_get_build_path()` To Do The Actual Conversion
         """
 
-        source_dir = config['build']['source-dir']
-        build_dir = config['build']['build-dir']
+        source_dir = config['build']['source_dir']
+        build_dir = config['build']['build_dir']
 
-        build_path = self._get_build_path(source_dir, build_dir, self.file.path, BUILD_EXTENSION)
+        build_path = super().get_build_path(source_dir, build_dir, self.file.path, BUILD_EXTENSION)
 
         # Check If Build_Path is False (source_path doesn't contain source_dir)
         if build_path:
@@ -129,12 +131,12 @@ class PageQuerier(BasePageQuerier):
 
         # Get Template Dir from Config, Concatenate It To Relative TemplatePath
         # (Strips '/' From Start Of 'template_path' If Present To Prevent 'os.path.join()' Issues)
-        template_dir = config['build']['template-dir']
+        template_dir = config['build']['template_dir']
         template_path = template_path[1:] if template_path[0] == "/" else template_path
         template_path = os.path.join(template_dir, template_path)
 
         # Get Template Using BasePageQuerier Method
-        template = self._get_template(template_path)
+        template = super().get_template(template_path)
 
         # Check If _get_template() Returned False, Throw Exception
         if template:
@@ -158,7 +160,7 @@ class PageQuerier(BasePageQuerier):
 
         # Get Source Using BasePageQuerier
         # _get_source() Returns The Tuple (metadata, content) or False on failure
-        source = self._get_source(self.file.path)
+        source = super().get_source(self.file.path)
 
         # Check If BasePageQuerier Returned False
         if source:
@@ -178,12 +180,12 @@ class PageQuerier(BasePageQuerier):
         """
 
         # Get Default Values, etc From Config
-        default_template = config['build']['default-template']
-        title_suffix = config['site']['title-suffix']
+        default_template = config['build']['default_template']
+        title_suffix = config['site']['title_suffix']
         
         # Populate Dict To Be Passed To BasePageQuerier Method
         default_values = {'title': self.file.basename, 'template': default_template}
-        metadata = self._add_default_metadata(metadata, default_values)
+        metadata = super().add_default_metadata(metadata, default_values)
 
         # Add Title Suffix To Title
         metadata['title'] = f"{metadata['title']} {title_suffix}"

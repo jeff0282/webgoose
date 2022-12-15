@@ -36,21 +36,9 @@ class BasePageQuerier:
         """
         pass
 
-    
-
-    def _page_exists(self, path: str) -> bool:
-
-        """
-        Returns Boolean Of Whether Page Exists Or Not
-
-        The Definition of a Valid Page May Be Expanded Upon In Future, Hence Exists A Dedicated Method
-        """
-
-        return os.path.isfile(path)
 
 
-
-    def _get_build_path(self, source_dir: str, build_dir: str, source_path: str, build_extension: str) -> Union[str, bool]:
+    def get_build_path(self, source_dir: str, build_dir: str, source_path: str, build_extension: str) -> Union[str, bool]:
 
         """
         Converts a SourceFile Path to a Path Within The BuildDir, Respecting Folder Structure Of SourceDir
@@ -75,7 +63,7 @@ class BasePageQuerier:
 
 
     
-    def _get_template(self, template_path: str) -> Union[str, bool]:
+    def get_template(self, template_path: str) -> Union[str, bool]:
 
         """
         Get Template From Path Provided As A String
@@ -106,7 +94,7 @@ class BasePageQuerier:
 
 
 
-    def _get_source(self, source_path: str) -> Union[Tuple[Dict[str,Any], str], bool]:
+    def get_source(self, source_path: str) -> Union[Tuple[Dict[str,Any], str], bool]:
 
         """
         Read Source File, Split Frontmatter from Content
@@ -127,7 +115,7 @@ class BasePageQuerier:
 
 
 
-    def _add_default_metadata(self, metadata: dict[str, Any], default_values: dict[str, Any]) -> Dict[str, Any]:
+    def add_default_metadata(self, metadata: dict[str, Any], default_values: dict[str, Any]) -> Dict[str, Any]:
 
         """
         Takes A Dictionary of Default Values, Inserts Into Metadata Dict If Not Present

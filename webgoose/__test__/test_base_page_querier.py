@@ -11,6 +11,10 @@ TEST_FILES_DIR = "./webgoose/__test__/test_files/"
 
 def test_get_build_path():
 
+    """
+    Tests for BasePageQuerier._get_build_path()
+    """
+
     # Initialise BasePageQuerier
     querier = BasePageQuerier()
 
@@ -39,14 +43,26 @@ def test_get_build_path():
     test_source_4 = "./source"
     test_build_4 = "./build"
 
-    assert querier._get_build_path(test_source_1, test_build_1, test_path_1, build_ext) == "/home/user/webgoose/build/index.html"
-    assert querier._get_build_path(test_source_2, test_build_2, test_path_2, build_ext) == "/home/user/webgoose/build/index.html"
-    assert querier._get_build_path(test_source_3, test_build_3, test_path_3, build_ext) == "/home/user/webgoose/build/index.html"
-    assert querier._get_build_path(test_source_4, test_build_4, test_path_4, build_ext) == "./build/index.html"
+    # Case With Source Path that Doesn't Contain Source Dir
+    test_path_5 = "./source/index.md"
+    test_source_5 = "./src"
+    test_build_5 = "./bld"
+
+    assert querier.get_build_path(test_source_1, test_build_1, test_path_1, build_ext) == "/home/user/webgoose/build/index.html"
+    assert querier.get_build_path(test_source_2, test_build_2, test_path_2, build_ext) == "/home/user/webgoose/build/index.html"
+    assert querier.get_build_path(test_source_3, test_build_3, test_path_3, build_ext) == "/home/user/webgoose/build/index.html"
+    assert querier.get_build_path(test_source_4, test_build_4, test_path_4, build_ext) == "./build/index.html"
+    assert querier.get_build_path(test_source_5, test_build_5, test_path_5, build_ext) == False
 
 
 
 def test_frontmatter_defaults():
+
+    """
+    Tests For External Python-Frontmatter Package
+
+    Double-Checks Default Values
+    """
 
     # Should Type Numbers Correctly, Content Should Be ''
     # (note space after 'Float: 5.5' (testing if it's stripped or interpreted as string))
@@ -92,7 +108,7 @@ def test_add_default_metadata():
     metadata = {'title': 'Title', 'description': ''}
     defaults = {'template': 'base.html', 'description': 'this is a description'}
 
-    assert querier._add_default_metadata(metadata, defaults) == {'title': 'Title', 'description': '', 'template': 'base.html'}
+    assert querier.add_default_metadata(metadata, defaults) == {'title': 'Title', 'description': '', 'template': 'base.html'}
 
 
 

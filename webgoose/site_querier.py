@@ -2,7 +2,7 @@
 import os
 import time
 
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from webgoose import config
 from webgoose import FileTraverser
@@ -15,9 +15,16 @@ class SiteQuerier:
     
     def __init__(self, timestamp: float):
 
-        """ Takes An Epoch Timestamp To Set As Build Time """
+        """
+        Initialise SiteQuerier with Unix Timestamp (should be the start-build time)
+        """
+        self.__time = timestamp
 
-        self.time = timestamp 
+
+
+    @property
+    def time(self) -> float:
+        return self.__time
 
 
 
@@ -35,29 +42,15 @@ class SiteQuerier:
 
 
 
-    def __get_all_files(self) -> List[str]:
-        
-        """
-        Get All Files From Source Directory
-
-        Returns A List Of Paths (Strings)
-        """
-
-        traverser = FileTraverser(config['build']['source-dir'])
-        return traverser.find_files_rec()
-
-
-
     def get_all_files(self) -> List[WGFile]:
 
         """
-        Gets All Files From Source Directory Using Private Method __get_all_files()
-
-        Returns A List Of WGFiles With File Attributes
+        Gets All Files From Source Directory Using FileTraverser, Gets Metadata From Files and
+        Returns A List Of WGFiles With Relevant Metadata Attributes
         """
 
         # Get List Of All File Paths In Source Directory
-        file_paths = self.__get_all_files()
+        file_paths = FileTraverser(config['build']['source_dir']).find_files_rec()
 
         # Initialise List For WGFile Objects
         files = []
