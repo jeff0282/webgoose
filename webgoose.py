@@ -1,21 +1,57 @@
 
+"""
+
+Webgoose - Static Site Generator
+
+---
+
+MIT License
+
+Copyright (c) 2022 Travis F. Campbell
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+"""
+
+
 import time
 
-from src.webgoose.file_traverser import FileTraverser
-from src.webgoose.page_builder import PageBuilder
-
-start = time.time()
-
-traverser = FileTraverser("source")
-
-_, pages_to_build = traverser.find_recursive(".md")
-
-builder = PageBuilder(pages_to_build)
-
-builder.build_all()
-
-end = time.time()
-print(f"took {end - start} seconds")
+from webgoose import SiteQuerier
+from webgoose import PageQuerier
 
 
+def build_pages():
 
+    site = SiteQuerier(time.time()).get_site_info()
+
+    page_aggr = []
+    for page_obj in site.pages:
+        page = PageQuerier(page_obj)
+        page_aggr.append(page.get_page_info())
+
+    print([x.build_path for x in page_aggr])
+    print([x.path for x in site.static_files])
+    print(f"timestamp: {site.time}")
+    print(f'source-dir: {site.config.__dict__}')
+
+
+
+
+if __name__ == "__main__":
+    build_pages()

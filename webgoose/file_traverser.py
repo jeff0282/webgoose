@@ -1,16 +1,13 @@
 
 import os
-from typing import List, Optional, Tuple
+from typing import List, Optional
+
+from webgoose import WebgooseException
 
 
-class FileTraverserException(Exception):
-    pass
-
-
-# IMPROVE THIS !!!
-class DirectoryNotFoundException(FileTraverserException):
-    def __str__(self, directory: str):
-        return f"The Directory Could Not Be Found"
+class FileTraverserException(WebgooseException):
+    def __init__(self, message: Optional[str] = "Error Opening Directory"):
+        super().__init__("FileTraverserException", message)
 
 
 
@@ -19,60 +16,55 @@ class FileTraverser(object):
 
 
     def __init__(self, search_dir: str):
+
+        """
+        Initialise FileTraverser Instance with a Directory Path
+        """
+
         self.search_dir = search_dir
 
     
 
 
-    def find_recursive(self, extension: Optional[str] = "") -> Tuple[List[str], List[str]]:
+    def find_files_rec(self, extension: Optional[str] = "") -> List[str]:
         
         """ 
         Recursively Looks Through Directory and Subdirectories 
-        for Folders and Files Matching The (Optional) Extention
-
-        Time Complexity: O(n^2) Probably.. (avoid if possible)
+        for Files Matching The (Optional) Extention
         """
 
         file_list = []
-        dir_list = []
 
         if os.path.exists(self.search_dir):
 
             for (root, dirs, files) in os.walk(self.search_dir):
 
                 partial_file_list = [os.path.join(root, x) for x in files if x.endswith(extension)]
-                partial_dir_list = [os.path.join(root, x) for x in dirs]
-
                 file_list.extend(partial_file_list)
-                dir_list.extend(partial_dir_list)
 
         else:
             
             raise DirectoryNotFoundException()
 
-        return dir_list, file_list
+        return file_list
 
 
 
 
 
-    def find(self, extension: Optional[str] = "") -> Tuple[List[str], List[str]]:
+    def find_files(self, extension: Optional[str] = "") -> List[str]:
 
         """ 
         Finds All Files With Extension In The Directory Specified 
-        When Instantiating PageTraverser Object 
-
-        Time Complexity: O(n)
+        When Instantiating FileTraverser Object 
         """
 
         if os.path.exists(self.search_dir):
             
             file_list = [x for x in os.listdir(self.search_dir) if os.path.isfile(os.path.join(self.search_dir, x)) and x.endswith(extension)]
-            
-            dir_list = [x for x in os.listdir(self.search_dir) if os.path.isdir(x)]
 
         else: 
 
             raise DirectoryNotFoundException()
 
-        return dir_list, file_list
+        return file_list
