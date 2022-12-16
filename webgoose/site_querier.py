@@ -50,7 +50,7 @@ class SiteQuerier:
         """
 
         # Get List Of All File Paths In Source Directory
-        file_paths = FileTraverser(config['build']['source_dir']).find_files_rec()
+        file_paths = FileTraverser(config['source_dir']).find_files_rec()
 
         # Initialise List For WGFile Objects
         files = []

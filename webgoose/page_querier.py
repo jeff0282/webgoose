@@ -105,8 +105,8 @@ class PageQuerier(BasePageQuerier):
         Uses The BasePageQuerier's `_get_build_path()` To Do The Actual Conversion
         """
 
-        source_dir = config['build']['source_dir']
-        build_dir = config['build']['build_dir']
+        source_dir = config['source_dir']
+        build_dir = config['build_dir']
 
         build_path = super().get_build_path(source_dir, build_dir, self.file.path, BUILD_EXTENSION)
 
@@ -131,7 +131,7 @@ class PageQuerier(BasePageQuerier):
 
         # Get Template Dir from Config, Concatenate It To Relative TemplatePath
         # (Strips '/' From Start Of 'template_path' If Present To Prevent 'os.path.join()' Issues)
-        template_dir = config['build']['template_dir']
+        template_dir = config['template_dir']
         template_path = template_path[1:] if template_path[0] == "/" else template_path
         template_path = os.path.join(template_dir, template_path)
 
@@ -180,14 +180,14 @@ class PageQuerier(BasePageQuerier):
         """
 
         # Get Default Values, etc From Config
-        default_template = config['build']['default_template']
-        title_suffix = config['site']['title_suffix']
+        default_template = config['default_template']
         
         # Populate Dict To Be Passed To BasePageQuerier Method
         default_values = {'title': self.file.basename, 'template': default_template}
         metadata = super().add_default_metadata(metadata, default_values)
 
         # Add Title Suffix To Title
-        metadata['title'] = f"{metadata['title']} {title_suffix}"
+        if config['title_suffix']:
+            metadata['title'] = f"{metadata['title']} {config['title_suffix']}"
 
         return metadata

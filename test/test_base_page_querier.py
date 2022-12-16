@@ -1,12 +1,6 @@
 
-import frontmatter
-
 from webgoose.base_page_querier import BasePageQuerier
 from webgoose.structs import WGFile
-
-
-# TEST FILES DIRECTORY (RELATIVE TO PROJECT ROOT)
-TEST_FILES_DIR = "./webgoose/__test__/test_files/"
 
 
 def test_get_build_path():
@@ -53,50 +47,6 @@ def test_get_build_path():
     assert querier.get_build_path(test_source_3, test_build_3, test_path_3, build_ext) == "/home/user/webgoose/build/index.html"
     assert querier.get_build_path(test_source_4, test_build_4, test_path_4, build_ext) == "./build/index.html"
     assert querier.get_build_path(test_source_5, test_build_5, test_path_5, build_ext) == False
-
-
-
-def test_frontmatter_defaults():
-
-    """
-    Tests For External Python-Frontmatter Package
-
-    Double-Checks Default Values
-    """
-
-    # Should Type Numbers Correctly, Content Should Be ''
-    # (note space after 'Float: 5.5' (testing if it's stripped or interpreted as string))
-    test_string_1 = "---\ntitle: Example Title\nInt: 5\nFloat: 5.5 \n---"
-
-    # Content Should Be The String "1", Metadata {}
-    test_string_2 = "1"
-
-    # Content Should Be '', Metadata Should Be {}
-    test_string_3 = ""
-
-    # Misc Test, `template: Null` Should Return {'template: Null}
-    test_string_4 = "---\ntemplate: Null\n---"
-
-
-    # Test 1
-    test1 = frontmatter.loads(test_string_1)
-    assert test1.content == ''
-    assert type(test1.metadata['Int']) == int
-    assert type(test1.metadata['Float']) == float
-
-    # Test 2
-    test2 = frontmatter.loads(test_string_2)
-    assert test2.content == "1"
-    assert test2.metadata == {}
-
-    # Test 3
-    test3 = frontmatter.loads(test_string_3)
-    assert test3.metadata == {}
-    assert test3.content == ""
-
-    # Test 4
-    test4 = frontmatter.loads(test_string_4)
-    assert test4.metadata['template'] == None
 
 
 

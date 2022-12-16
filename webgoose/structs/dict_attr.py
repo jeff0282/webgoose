@@ -16,4 +16,8 @@ class DictAttr:
         """
 
         for key, value in dict.items():
-            setattr(self, key, value)
+            
+            # Check If Value == None (this is what Python-YAML spits out if value if empty)
+            # (note: this IS unit tested)
+            if value != None:
+                setattr(self, key, value)
