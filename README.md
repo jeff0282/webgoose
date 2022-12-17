@@ -4,6 +4,8 @@
 
 ![Version Badge](https://raster.shields.io/badge/Version-0.3.4-green)
 
+![Version Badge](https://raster.shields.io/badge/Version-0.3.4-green)
+
 Webgoose is a Static Page Generator written in Python, using the Jinja2 Templating Engine and CMARK-GFM for Markdown Conversion.
 
 ---
