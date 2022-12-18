@@ -17,7 +17,16 @@ from .webgoose_exception import WebgooseException
 from .file_traverser import FileTraverser
 
 
-# GRABBERS
+# QUERIERS
 from .site_querier import SiteQuerier 
 from .page_querier import PageQuerier 
+
+
+# RENDER
+from .renderer import Renderer
+
+
+# BUILD HANDLER CLASS
+from .build_handler import BuildHandler
+
 

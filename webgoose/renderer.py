@@ -2,6 +2,7 @@
 from typing import Any, Dict, Optional
 from jinja2 import Environment, FileSystemLoader
 
+from webgoose import config
 from webgoose.structs import PageInfo
 from webgoose.utils import render_utils
 
@@ -50,7 +51,7 @@ class Renderer:
 
         # Setup Jinja2 Environment
         jinja_env = Environment(
-            loader = FileSystemLoader(config["template_location"])
+            loader = FileSystemLoader(config["template_dir"])
         )
 
         # Create A Jinja2 Template From The Input String

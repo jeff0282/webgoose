@@ -1,9 +1,9 @@
 
 
-def markdownify(self, markdown: str) -> str:
+def markdownify(markdown: str) -> str:
 
     """
     Convert A Markdown String To HTML Using CMARK-GFM
     """
 
-    pass
+    return markdown

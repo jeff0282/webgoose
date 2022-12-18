@@ -32,26 +32,20 @@ SOFTWARE.
 
 import time
 
-from webgoose import SiteQuerier
-from webgoose import PageQuerier
-
+from webgoose import BuildHandler
+from webgoose import version
 
 def build_pages():
 
-    site = SiteQuerier(time.time()).get_site_info()
+    print(f"\nWebgoose Static Site Generator ({version})\n")
 
-    page_aggr = []
-    for page_obj in site.pages:
-        page = PageQuerier(page_obj)
-        page_aggr.append(page.get_page_info())
-
-    print([x.build_path for x in page_aggr])
-    print([x.path for x in site.static_files])
-    print(f"timestamp: {site.time}")
-    print(f'source-dir: {site.config.__dict__}')
+    handler = BuildHandler()
+    handler.configure()
+    handler.build_all()
 
 
 
 
 if __name__ == "__main__":
+    
     build_pages()
