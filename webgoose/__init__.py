@@ -1,5 +1,4 @@
 
-
 # VERSION INFORMATION
 from .version import version
 from .version import version_info
@@ -18,8 +17,8 @@ from .file_traverser import FileTraverser
 
 
 # QUERIERS
-from .site_querier import SiteQuerier 
 from .page_querier import PageQuerier 
+from .site_querier import SiteQuerier 
 
 
 # RENDER

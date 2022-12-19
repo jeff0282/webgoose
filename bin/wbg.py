@@ -31,9 +31,15 @@ SOFTWARE.
 
 
 import time
+import os
+import sys
+
+# TO ALLOW FOR TESTING WITHOUT INSTALLATION, ADD FULL PATH TO WEBGOOSE SRC TO SYS.PATH
+sys.path.append("/home/travis/Projects/webgoose")
 
 from webgoose import BuildHandler
 from webgoose import version
+
 
 def build_pages():
 
@@ -44,8 +50,5 @@ def build_pages():
     handler.build_all()
 
 
-
-
 if __name__ == "__main__":
-    
     build_pages()

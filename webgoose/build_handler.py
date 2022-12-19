@@ -87,6 +87,7 @@ class BuildHandler:
                 final_page = self.build_page(page)
 
                 # Output The Page To File
+                print(final_page)
                 pass
 
                 # Update Build Report

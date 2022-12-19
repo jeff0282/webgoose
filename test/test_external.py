@@ -20,7 +20,7 @@ def test_frontmatter_defaults():
     # Content Should Be '', Metadata Should Be {}
     test_string_3 = ""
 
-    # Misc Test, `template: Null` Should Return {'template: Null}
+    # Misc Test, `template: Null` Should Return {'template: None}
     test_string_4 = "---\ntemplate: Null\n---"
 
 
