@@ -68,21 +68,14 @@ class BasePageQuerier:
         """
         Get Template From Path Provided As A String
 
-        If TemplatePath is "Null", Return The Empty Template
-
         Returns 'False' If Template Not Found
         """
 
         # Strip Whitespace To Avoid Comparison Issues
         template_path = template_path.strip()
 
-        # Return Empty Template If Path is None
-        if template_path == None:
-
-            return "{{content}}"
-
         # If Not "None" Check If File Exists
-        elif os.path.isfile(template_path):
+        if os.path.isfile(template_path):
 
             with open(template_path, "r", encoding="utf-8") as template:
                 return template.read()

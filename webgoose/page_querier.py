@@ -127,7 +127,13 @@ class PageQuerier(BasePageQuerier):
         # THROWS AN EXCEPTION IF TEMPLATE FILE NOT FOUND #
 
         Gets Template File as String Using Path Provided
+
+        If The Template Specified In Frontmatter is of a NoneType Provide The Null Template
         """
+
+        # Check If Null Template Specified
+        if template_path == None:
+            return "{{content}}"
 
         # Get Template Dir from Config, Concatenate It To Relative TemplatePath
         # (Strips '/' From Start Of 'template_path' If Present To Prevent 'os.path.join()' Issues)

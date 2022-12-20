@@ -1,8 +1,6 @@
 
-
 # VERSION INFORMATION
-from .version import version
-from .version import version_info
+from .version import __version__
 
 
 # CONFIG
@@ -17,7 +15,16 @@ from .webgoose_exception import WebgooseException
 from .file_traverser import FileTraverser
 
 
-# GRABBERS
-from .site_querier import SiteQuerier 
+# QUERIERS
 from .page_querier import PageQuerier 
+from .site_querier import SiteQuerier 
+
+
+# RENDER
+from .renderer import Renderer
+
+
+# BUILD HANDLER CLASS
+from .build_handler import BuildHandler
+
 
