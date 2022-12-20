@@ -1,7 +1,6 @@
 
 # VERSION INFORMATION
-from .version import version
-from .version import version_info
+from .version import __version__
 
 
 # CONFIG
