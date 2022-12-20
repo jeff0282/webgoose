@@ -17,10 +17,8 @@ More Information will be Added to this README as Development Progresses.
 Webgoose can be installed simply by running the following commands:
 ```
 git clone https://github.com/jeff0282/webgoose
-
-// The '-e' Flag Is Recommended As Webgoose Is Currently In Development
-pip3 install -e .
-
+cd webgoose
+pip3 install .
 ```
 
 ### Usage:
