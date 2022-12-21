@@ -24,18 +24,6 @@ class BuildHandler:
 
 
 
-    @property
-    def build_time(self) -> float:
-        return self.__build_time
-
-
-
-    @property
-    def site_info(self):
-        return self.__site_info
-
-
-
     def pre_flight_checks(self) -> bool:
 
         """
@@ -67,10 +55,10 @@ class BuildHandler:
         if self.pre_flight_checks():
 
             # Initialise Site Querier Instance
-            querier = SiteQuerier(self.build_time)
+            querier = SiteQuerier(self.__build_time)
 
             # Set WGSite Object Retrieved For Querier
-            self.site = querier.get_site_info()
+            self.__site_info = querier.get_site_info()
 
         else:
 

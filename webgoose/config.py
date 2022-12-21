@@ -25,7 +25,7 @@ from typing import Any, Dict, Union
 # CONSTANTS
 #
 
-DEFAULT_CONFIG_PATHS = [".config/config.yaml", "config.yaml"]
+DEFAULT_CONFIG_PATHS = [".config/config.yaml", ".config.yaml"]
 
 
 
@@ -34,7 +34,9 @@ def get_config() -> Union[str, None]:
     """
     Attempts To Get The Config File From A Few Potential Locations
 
-    If It Manages To Get It, Pass It To parse_config() And Return Whatever It Returns, Otherwise Return None
+    - If Found and Parsed Correctly, Return config
+    - If Parse Error, Return The Exception
+    - If Not Found, Return None
     """
 
     for path in DEFAULT_CONFIG_PATHS:
@@ -58,5 +60,5 @@ def get_config() -> Union[str, None]:
 
 
 
-
+# Config Var For Import
 config = get_config()

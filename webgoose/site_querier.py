@@ -1,5 +1,5 @@
 
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
 from webgoose import config
 from webgoose import FileTraverser
@@ -7,7 +7,7 @@ from webgoose import PageQuerier
 from webgoose import __version__
 from webgoose.structs import WGSite
 from webgoose.structs import WGFile
-from webgoose.utils import file_utils
+from webgoose.utils import path_utils
 
 
 #
@@ -101,7 +101,7 @@ class SiteQuerier:
         # Create WGFile Object For Each File, Additionally Separate and Handle Different File Types
         for path in file_paths:
 
-            file_meta = file_utils.get_file_info(path)
+            file_meta = path_utils.get_file_info(path)
 
             if file_meta['ext'] in PAGE_SOURCE_EXTS:
 
@@ -124,6 +124,7 @@ class SiteQuerier:
 
     
     def __get_files_in_dir(self, path: str) -> List[str]:
+        
         """
         A Convienience Wrapper For FileTraverser.find_files_rec()
         """
@@ -140,17 +141,20 @@ class SiteQuerier:
         """
 
         # Get Build Path For File, Change Build Extension
-        build_path = file_utils.map_path(config['source_dir'], config['build_dir'], file_meta['path'])
+        build_path = path_utils.map_path(config['source_dir'], config['build_dir'], file_meta['path'])
 
         # Extension May Already Be '.html', But This Doesn't Hurt :)
-        build_path = file_utils.change_path_extension(build_path, PAGE_BUILD_EXT)
+        build_path = path_utils.change_path_extension(build_path, PAGE_BUILD_EXT)
 
-        # Add BuildPath and Optional BuildExt Values To FileMeta Dict
+        # Set Source_Ext Field To Original Ext
+        file_meta['source_ext'] = file_meta['ext']
+
+        # Add BuildPath Field and Set Extension to Build Extension
         file_meta['build_path'] = build_path
-        file_meta['build_ext'] = PAGE_BUILD_EXT
+        file_meta['ext'] = PAGE_BUILD_EXT
     
-        # Create WGFile Object
-        file_obj = self.__make_wg_file(file_meta)
+        # Create WGPage Object
+        # TODO
 
         # Add WGFile Object To Relevant Lists
         self.__all_files.append(file_obj)
@@ -173,28 +177,12 @@ class SiteQuerier:
         """
 
         # Get Build Path For File, Add To File_Meta Dict
-        build_path = file_utils.map_path(config['source_dir'], config['build_dir'], file_meta['path'])
+        build_path = path_utils.map_path(config['source_dir'], config['build_dir'], file_meta['path'])
         file_meta['build_path'] = build_path
 
         # Create WGFile Object
-        file_obj  = self.__make_wg_file(file_meta)
+        # TODO
 
         # Add WGFile To All Files and Static Files Lists
         self.__all_files.append(file_obj)
         self.__static_files.append(file_obj)
-
-
-
-    def __make_wg_file(self, file_meta: Dict[str, Union[str, float]]) -> WGFile:
-
-        """
-        Convienience Method For Creating A WGFile Object Using A File Metadata Dict
-        """
-
-        # Handle Optional Argument, build_ext
-        if not "build_ext" in file_meta:
-            file_meta['build_ext'] = None
-
-        # Make and Return WGFile Object
-        return WGFile(file_meta['path'], file_meta['build_path'], file_meta['basename'], 
-                        file_meta['ext'], file_meta['build_ext'])

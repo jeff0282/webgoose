@@ -1,7 +1,7 @@
 
 import os
 
-from typing import Tuple, Optional
+from typing import Any, Tuple, Optional
 
 from webgoose import config
 from webgoose import WebgooseException

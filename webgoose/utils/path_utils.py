@@ -25,7 +25,7 @@ def get_file_info(path: str) -> Dict[str, Union[str, float]]:
 
 
 
-def map_path(source_dir: str, dest_dir: str, source_path: str) -> str:
+def map_path(source_dir: str, dest_dir: str, source_path: str) -> Union[str,bool]:
 
     """
     Converts a File Path In One Directory to a Path Within The Destination Dir, Respecting Folder Structure Of SourceDir
@@ -34,17 +34,19 @@ def map_path(source_dir: str, dest_dir: str, source_path: str) -> str:
     Returns 'False' If SourceDir is not within SourcePath
     """
 
-    # Test Whether SourceDir is a prefix of SourcePath
-    if os.path.commonprefix([source_dir, source_path]) != source_dir:
-        return False
-
-    # Replace Source Dir In Source Path With Dest Dir
-    # Strip Source Dir From Source Path, Put Dest_Dir At Front
-    rel_dest_path = re.sub(r"^"+source_dir, "", source_path)
+    # Get Suffix Of Source Path, using Source Dir as Prefix, MAY RETURN FALSE
+    rel_dest_path = strip_prefix(source_dir, source_path)
 
     # Strip Off First '/' If Present In rel_build_path To Avoid os.path.join() Treating 2nd Arg As An Absolute Path
-    dest_path = rel_dest_path[1:] if rel_dest_path[0] == "/" else rel_dest_path
-    return os.path.join(dest_dir, dest_path)
+    if rel_dest_path:
+
+        dest_path = rel_dest_path[1:] if rel_dest_path[0] == "/" else rel_dest_path
+        return os.path.join(dest_dir, dest_path)
+
+    # If Source Dir is NOT a Prefix of Source Path, Return False 
+    else:
+
+        return False
 
 
 
@@ -67,3 +69,24 @@ def change_path_extension(path: str, new_ext: str) -> Union[str,bool]:
 
     return os.path.join(dir, basename + new_ext)
     
+
+
+def strip_prefix(prefix_dir: str, path: str) -> Union[str,bool]:
+
+    """
+    Strip A Common Prefix From A Path
+
+    Returned path will ALWAYS be relative (no leading '/')
+
+    Returns False if prefix_path is not in path
+    """
+
+    # Test Whether Prefix_Dir is a prefix of Path
+    if os.path.commonprefix([prefix_dir, path]) != prefix_dir:
+        return False
+
+    # Given That Source_Dir is a prefix of Source_Path, Slice Of Length of Source_Dir from start
+    suffix_path = path[len(prefix_dir):]
+
+    # Strip Off First '/' If Present and Return
+    return suffix_path[1:] if suffix_path[0] == '/' else suffix_path

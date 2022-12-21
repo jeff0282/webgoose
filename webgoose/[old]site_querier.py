@@ -9,7 +9,7 @@ from webgoose import FileTraverser
 from webgoose import __version__
 from webgoose.structs import WGSite
 from webgoose.structs import WGFile
-from webgoose.utils import file_utils
+from webgoose.utils import path_utils
 
 
 
@@ -68,7 +68,7 @@ class SiteQuerier:
 
             # Get Basename and Extension From Filename
             filename = os.path.basename(file_path)
-            basename, ext = file_utils.split_filename(filename)
+            basename, ext = path_utils.split_filename(filename)
 
             # Get Last Modified Time Of File As Float Epoch Timestamp
             last_mod = os.path.getmtime(file_path)

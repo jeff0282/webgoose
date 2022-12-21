@@ -1,45 +1,71 @@
 
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
-class WGFile:
+from webgoose.structs import WGBaseFile
 
-    def __init__(self, source_path: str, build_path: str, basename: str, last_mod: float, ext: str, build_ext: Optional[Union[str, None]] = None):
-        
+
+
+class WGFile(WGBaseFile):
+
+    def __init__(self, file_meta: Dict[str, Union[str,float,None]]):
+
         """
-        Initialises Object Instance With File Information
+        Initialise WGFile Object Using Dict Containing File Metadata
 
-        Designed To Work In Conjunction With SiteQuerier
+        Passes File_Meta Dict to 
         """
 
-        self.__source_path = source_path
-        self.__build_path = build_path
-        self.__basename = basename
-        self.__last_mod = last_mod
-        self.__ext = ext
-        self.__build_ext = build_ext
+        # Initialises WGFile Object Using Meta Dict By Calling BaseFile Class
+        super().__init__(file_meta)
+
+        # HACK 
+        # To make WGFile Attributes Immutable: 
+        # - Set self.__attribute = self.attribute
+        # - Make self.attributes a Property (OVERWRITING ORIGINAL ATTRIBUTES)
+        # - Profit ???
+
+        # Thanks to WGBaseFile, It Can Be Assumed These Attributes Exist:
+        # .source_path, .build_path, .basename, .last_mod, .ext
+
+        self.__source_path = self.source_path
+        self.__build_path = self.build_path
+        self.__basename = self.basename
+        self.__last_mod = self.last_mod
+        self.__ext = self.ext
 
 
 
     @property
-    def source_path(self) -> str:
+    def _source_path(self) -> str:
+        print("lol")
         return self.__source_path
 
+
     @property
-    def build_path(self) -> str:
+    def _build_path(self) -> str:
         return self.__build_path
 
+
     @property
-    def basename(self) -> str:
+    def _basename(self) -> str:
         return self.__basename
 
+
     @property
-    def last_mod(self) -> float:
+    def _last_mod(self) -> float:
         return self.__last_mod
 
-    @property
-    def ext(self) -> str:
+
+    def _ext(self) -> str:
         return self.__ext
 
-    @property
-    def build_ext(self) -> Union[str,None]:
-        return self.__build_ext
+
+
+
+
+
+
+
+                 
+
+    
