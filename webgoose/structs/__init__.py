@@ -1,6 +1,7 @@
 
-# Import Structs Here For Convience
-from .wg_file import WGFile
+# Import Structs Here For Convenience
 from .dict_attr import DictAttr
-from .site_info import SiteInfo
-from .page_info import PageInfo
+from .wg_file import WGFile
+from .wg_page import WGPage
+from .wg_data_file import WGDataFile
+from .wg_site import WGSite

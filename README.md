@@ -1,8 +1,8 @@
-# Webgoose - Web 1.0 Style Static Page Generator
+# Webgoose - Web 1.0 Style Static Site Generator
 
 **(IN DEVELOPMENT)**
 
-Webgoose is a Static Page Generator written in Python, using the Jinja2 Templating Engine and CMARK-GFM for Markdown Conversion.
+Webgoose is a Static Site Generator written in Python, using the Jinja2 Templating Engine and CMARK-GFM for Markdown Conversion.
 
 More Information will be Added to this README as Development Progresses.
 

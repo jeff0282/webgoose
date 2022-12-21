@@ -1,34 +1,62 @@
 
+"""
+Script Reponsible For Loading Config
+
+(this script is a little weird)
+
+
+This script must NOT complain if the config file isn't found, as that is the responsibility of other scripts.
+
+Consequently, if the config file isn't found, the script will silently fail and set config = None
+
+If the config file contains errors, the script will silently fail and set config = yaml.YAMLError for later consultation by other scripts
+
+"""
+
 import configparser
 import os
-import sys
 import yaml
 
+from typing import Any, Dict, Union
 
-# Relative Location From CWD
-DEFAULT_CONFIG_LOCATION = ".config/config.yaml"
 
-if os.path.isfile(DEFAULT_CONFIG_LOCATION):
 
-    with open(DEFAULT_CONFIG_LOCATION, "r", encoding="utf-8") as raw_config:
+#
+# CONSTANTS
+#
+
+DEFAULT_CONFIG_PATHS = [".config/config.yaml", "config.yaml"]
+
+
+
+def get_config() -> Union[str, None]:
+
+    """
+    Attempts To Get The Config File From A Few Potential Locations
+
+    If It Manages To Get It, Pass It To parse_config() And Return Whatever It Returns, Otherwise Return None
+    """
+
+    for path in DEFAULT_CONFIG_PATHS:
+
         try:
 
-            config = yaml.safe_load(raw_config)
+            with open(path, "r", encoding="utf-8") as raw_config:
+                return yaml.safe_load(raw_config)
+        
+        except (FileNotFoundError, IOError):
+
+            continue
 
         except yaml.YAMLError as e:
 
-            # Exit As Nothing Can Be Done If Config Can't Be Loaded
-            # Try and Get Error Info From YAML To Display To User
-            err_str = "FATAL: Incorrectly Formatted Config File:\nPlease Check Your Config File For Syntax Errors"
+            return e
 
-            # This Is Taken From Python-YAML Documentation (idk why you need +1 for lines and columns)
-            if hasattr(e, 'problem_mark'):
-                mark = e.problem_mark
-                err_str += f"\nError At Line: {mark.line+1}, Column: {mark.column+1}"
+        
+        # If No Config File Found, Return None
+        return None
 
-            sys.exit(err_str)
 
-else:
 
-    # Exit As Nothing Can Be Done, Print Error To STDERR
-    sys.exit(f"FATAL: Unable To Open Config File:\nThe Config File, Located at Path '{DEFAULT_CONFIG_LOCATION}', Either Doesn't Exist or is Inaccessable")
+
+config = get_config()

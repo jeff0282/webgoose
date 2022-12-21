@@ -6,7 +6,7 @@ from typing import Tuple, Optional
 from webgoose import config
 from webgoose import WebgooseException
 from webgoose.base_page_querier import BasePageQuerier
-from webgoose.structs import PageInfo
+from webgoose.structs import WGPage
 from webgoose.structs import WGFile
 
 
@@ -50,12 +50,12 @@ class PageQuerier(BasePageQuerier):
 
 
 
-    def get_page_info(self) -> PageInfo:
+    def get_page_info(self) -> WGPage:
 
         """
         # CALL METHODS THAT MAY POTENTIALLY THROW EXCEPTIONS #
 
-        Returns A PageInfo Instance Containing All Information About A Page
+        Returns A WGPage Instance Containing All Information About A Page
         """
 
         if self.page_exists():
@@ -74,8 +74,8 @@ class PageQuerier(BasePageQuerier):
             # Get Raw Template As String
             template = self.get_template(metadata['template'])
 
-            # Create and Return A PageInfo Object Containing All Of The Gathered Info + WGFile Info
-            return PageInfo(self.file.path, build_path, self.file.basename, BUILD_EXTENSION, self.file.last_mod, metadata, template, content)
+            # Create and Return A WGPage Object Containing All Of The Gathered Info + WGFile Info
+            return WGPage(self.file.path, build_path, self.file.basename, BUILD_EXTENSION, self.file.last_mod, metadata, template, content)
 
         else:
 
@@ -179,7 +179,7 @@ class PageQuerier(BasePageQuerier):
 
 
 
-    def add_missing_metadata(self, metadata: dict[str, str]) -> dict[str, str]:
+    def add_missing_metadata(self, metadata: dict[str, Any]) -> dict[str, Any]:
 
         """ 
         Fills In Missing Metadata Using Source File Informatation, config, and Defaults

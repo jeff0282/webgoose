@@ -1,92 +1,200 @@
 
-import os
-import time
-
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Union
 
 from webgoose import config
 from webgoose import FileTraverser
-from webgoose.structs import SiteInfo
+from webgoose import PageQuerier
+from webgoose import __version__
+from webgoose.structs import WGSite
 from webgoose.structs import WGFile
 from webgoose.utils import file_utils
 
 
+#
+# CONSTANTS
+#
+
+# Extensions Seen As Page Source Files
+PAGE_SOURCE_EXTS = [".md", ".html"]
+
+# The Final Build Extension
+PAGE_BUILD_EXT = ".html"
+
+
 class SiteQuerier:
-    
+
     def __init__(self, timestamp: float):
 
         """
-        Initialise SiteQuerier with Unix Timestamp (should be the start-build time)
+        Initialise SiteQuerier Object With Timestamp (used as start-of-build time)
+
+        Also Initialises Lists for Storing Types Of Files Found
         """
+
         self.__time = timestamp
 
-
-
-    @property
-    def time(self) -> float:
-        return self.__time
-
-
-
-    def get_site_info(self) -> SiteInfo:
-
-        """
-        Gets All Site Info and Returns It As SiteInfo Object
-        """
-
-        all_files = self.get_all_files()
-
-        pages, static_files = self.seperate_pages_from_static_files(all_files)
-
-        return SiteInfo(self.time, config, all_files, pages, static_files)
+        # EMPTY LISTS FOR TYPES OF FILES THAT MAY BE FOUND
+        self.__all_files = []
+        self.__static_files = []
+        self.__pages = []
+        self.__data_files = []
 
 
 
-    def get_all_files(self) -> List[WGFile]:
+
+    def clear(self):
 
         """
-        Gets All Files From Source Directory Using FileTraverser, Gets Metadata From Files and
-        Returns A List Of WGFiles With Relevant Metadata Attributes
+        Resets All Lists To Default Values
         """
 
-        # Get List Of All File Paths In Source Directory
-        file_paths = FileTraverser(config['source_dir']).find_files_rec()
-
-        # Initialise List For WGFile Objects
-        files = []
-
-        # !!! THIS COULD LIKELY BE IMPROVED !!!
-        for file_path in file_paths:
-
-            # Get Basename and Extension From Filename
-            filename = os.path.basename(file_path)
-            basename, ext = file_utils.split_filename(filename)
-
-            # Get Last Modified Time Of File As Float Epoch Timestamp
-            last_mod = os.path.getmtime(file_path)
-
-            # Put File Info into a WGFile Object and Add To File List
-            file = WGFile(file_path, basename, ext, last_mod)
-            files.append(file)
-
-        return files
+        self.__all_files = []
+        self.__static_files = []
+        self.__pages = []
+        self.__data_files = []
 
 
 
-    def seperate_pages_from_static_files(self, files_list: WGFile) -> Tuple[List[WGFile], List[WGFile]]:
+    
+    def get_site_info(self) -> WGSite:
 
         """
-        Takes A List Of WGFile Objects, and Returns Two Sublist Containing Those That Are Source Pages, And Those That Aren't (Static Files)
-
-        Anything That Isn't A Markdown File IS Assumed To Be A Static File.
-
-        (It Just Checks If The File Extension Corresponds With a Markdown File :3)
+        Gathers All Site Information and Produces a WGSite Object
         """
 
-        PAGE_EXT = ".md"
+        # Populate Instance File Lists With Files Found
+        self.__get_all_files()
 
-        # Seperate WGFile Objects Into Pages, Static_Files Lists Depending On Whether or Not The File Extension Is PAGE_EXT
-        pages, static_files = [file for file in files_list if file.ext.lower() == PAGE_EXT] , [file for file in files_list if file.ext.lower() != PAGE_EXT] 
+        # Return A Site Info Object Containing Everything
+        return WGSite(self.__time, __version__, config, self.__all_files,
+                    self.__pages, self.__static_files, self.__data_files)
 
-        return pages, static_files
 
+
+    
+    def __get_all_files(self):
+
+        """
+        Primary Method for Getting All Files From All Linked Directories
+        """
+
+        # Clear All Lists Before Starting, Just Incase
+        self.clear()
+
+        # Gather and Sort All Files In Source Directory
+        self.__get_files_in_source_dir()
+
+        # TODO: GET FILES FROM LINKED DIRS, DATA DIR, TEMPLATE DIR, ETC
+
+
+
+
+    def __get_files_in_source_dir(self):
+
+        """
+        Wrapper Method For Getting All Types Of Files From The Source Directory
+        """
+
+        # Get All Files From Specified Source Directory
+        file_paths = self.__get_files_in_dir(config['source_dir'])
+
+        # Create WGFile Object For Each File, Additionally Separate and Handle Different File Types
+        for path in file_paths:
+
+            file_meta = file_utils.get_file_info(path)
+
+            if file_meta['ext'] in PAGE_SOURCE_EXTS:
+
+                self.__handle_page_file(file_meta)
+
+            else:
+
+                self.__handle_static_file(file_meta)
+            
+
+
+    def __get_data_files(self):
+
+        """
+        Retrieves Data Files From Data File Dir Specified In config.yaml
+        """
+
+        pass
+
+
+    
+    def __get_files_in_dir(self, path: str) -> List[str]:
+        """
+        A Convienience Wrapper For FileTraverser.find_files_rec()
+        """
+
+        traverser = FileTraverser(path)
+        return traverser.find_files_rec()
+
+
+
+    def __handle_page_file(self, file_meta: Dict[str, Union[str, float]]):
+
+        """
+        Handle Getting and Storing of Information For Files Identified As Page Source Files
+        """
+
+        # Get Build Path For File, Change Build Extension
+        build_path = file_utils.map_path(config['source_dir'], config['build_dir'], file_meta['path'])
+
+        # Extension May Already Be '.html', But This Doesn't Hurt :)
+        build_path = file_utils.change_path_extension(build_path, PAGE_BUILD_EXT)
+
+        # Add BuildPath and Optional BuildExt Values To FileMeta Dict
+        file_meta['build_path'] = build_path
+        file_meta['build_ext'] = PAGE_BUILD_EXT
+    
+        # Create WGFile Object
+        file_obj = self.__make_wg_file(file_meta)
+
+        # Add WGFile Object To Relevant Lists
+        self.__all_files.append(file_obj)
+
+        # Call on PageQuerier To Create A WGPage Object
+        # !!!  THIS WILL NOT WORK  !!!
+        page_querier = PageQuerier(file_obj)
+        page_obj = page_querier.get_page_info()
+
+        # Add WGPage Object To Relevant Lists
+        self.__pages.append(page_obj)
+
+
+
+
+    def __handle_static_file(self, file_meta: Dict[str, Union[str, float]]):
+
+        """
+        Handle Getting and Storing of Information For Files Identified As Static Files
+        """
+
+        # Get Build Path For File, Add To File_Meta Dict
+        build_path = file_utils.map_path(config['source_dir'], config['build_dir'], file_meta['path'])
+        file_meta['build_path'] = build_path
+
+        # Create WGFile Object
+        file_obj  = self.__make_wg_file(file_meta)
+
+        # Add WGFile To All Files and Static Files Lists
+        self.__all_files.append(file_obj)
+        self.__static_files.append(file_obj)
+
+
+
+    def __make_wg_file(self, file_meta: Dict[str, Union[str, float]]) -> WGFile:
+
+        """
+        Convienience Method For Creating A WGFile Object Using A File Metadata Dict
+        """
+
+        # Handle Optional Argument, build_ext
+        if not "build_ext" in file_meta:
+            file_meta['build_ext'] = None
+
+        # Make and Return WGFile Object
+        return WGFile(file_meta['path'], file_meta['build_path'], file_meta['basename'], 
+                        file_meta['ext'], file_meta['build_ext'])

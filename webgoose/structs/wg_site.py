@@ -1,21 +1,25 @@
 
 from typing import Any, Dict, List
 
-from webgoose.structs import WGFile
 from webgoose.structs import DictAttr
+from webgoose.structs import WGDataFile
+from webgoose.structs import WGFile
+from webgoose.structs import WGPage
 
 
-class SiteInfo:
 
-    def __init__(self, time: float, site_config: Dict[str, Any], all_files: List[WGFile], 
-                pages: List[WGFile], static_files: List[WGFile]):
+class WGSite:
+
+    def __init__(self, time: float, webgoose_version: str, site_config: Dict[str, Any], all_files: List[WGFile], 
+                pages: List[WGPage], static_files: List[WGFile], data_files: List[WGDataFile]):
         
         """
-        Initialises A SiteInfo Object With Site Information Provided
+        Initialises A WGSite Object With Site Information Provided
         """
 
         # Timestamp Of Build Start and Config Dict
         self.__time = time
+        self.__version = webgoose_version
         self.__config = DictAttr(site_config)
 
         # File Lists (Lists of WGFile Objects)
@@ -28,6 +32,10 @@ class SiteInfo:
     @property
     def time(self) -> float:
         return self.__time
+
+    @property
+    def version(self):
+        return self.__version
 
     @property
     def config(self) -> DictAttr:

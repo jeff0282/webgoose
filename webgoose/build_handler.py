@@ -1,11 +1,13 @@
 
 import time
 import sys
+import yaml
 
+from webgoose import config
 from webgoose import PageQuerier
 from webgoose import Renderer
 from webgoose import SiteQuerier
-from webgoose.structs import PageInfo
+from webgoose.structs import WGPage
 
 
 class BuildHandler:
@@ -16,7 +18,7 @@ class BuildHandler:
         
         """
 
-        self.build_report = dict()
+        self.__build_report = dict()
         self.__build_time = time.time()
         self.__site_info = None
 
@@ -42,6 +44,16 @@ class BuildHandler:
         Checks, Source & Build Dir Accessbility, Config Correctness, etc
         """
 
+        if config == None:
+
+            print("config not found")
+            sys.exit(1)
+
+        elif config == yaml.YAMLError:
+
+            print("errors in config file")
+            sys.exit(1)
+
         return True
 
 
@@ -57,7 +69,7 @@ class BuildHandler:
             # Initialise Site Querier Instance
             querier = SiteQuerier(self.build_time)
 
-            # Set SiteInfo Object Retrieved For Querier
+            # Set WGSite Object Retrieved For Querier
             self.site = querier.get_site_info()
 
         else:
@@ -91,7 +103,7 @@ class BuildHandler:
                 pass
 
                 # Update Build Report
-                self.build_report[page_obj.path] = True
+                self.__build_report[page_obj.path] = True
 
             except Exception as e:
                 
@@ -110,13 +122,13 @@ class BuildHandler:
     
 
 
-    def build_page(self, page: PageInfo) -> bool:
+    def build_page(self, page: WGPage) -> bool:
 
         """
 
         """
 
-        # Initialise Page Renderer Instance With PageInfo Object
+        # Initialise Page Renderer Instance With WGPage Object
         renderer = Renderer(page)
 
         # Arguments Dict For Jinja2 Templating

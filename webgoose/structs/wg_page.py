@@ -2,17 +2,17 @@
 from webgoose.structs import WGFile
 
 
-class PageInfo:
+class WGPage:
 
     """
-    PageInfo - A Read-Only Struct For Storing Page Information Provided By PageQuerier
+    WGPage - A Read-Only Struct For Storing Page Information Provided By PageQuerier
     """
 
     def __init__(self, source_path: str, build_path: str, basename: str, ext: str, 
                 last_mod: float, metadata: dict[str, str], template: str, content: str):
 
         """
-        Initialise PageInfo Object With All Page Information Provided
+        Initialise WGPage Object With All Page Information Provided
         """
 
         # WGFile Object

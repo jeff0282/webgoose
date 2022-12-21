@@ -3,13 +3,13 @@ from typing import Any, Dict, Optional
 from jinja2 import Environment, FileSystemLoader
 
 from webgoose import config
-from webgoose.structs import PageInfo
+from webgoose.structs import WGPage
 from webgoose.utils import render_utils
 
 
 class Renderer:
 
-    def __init__(self, page: PageInfo):
+    def __init__(self, page: WGPage):
 
         """
         the
@@ -20,7 +20,7 @@ class Renderer:
 
 
     @property
-    def page(self) -> PageInfo:
+    def page(self) -> WGPage:
         return self.__page
 
 
