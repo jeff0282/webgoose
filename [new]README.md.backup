@@ -1,0 +1,253 @@
+# Webgoose - Web 1.0 Style, Static Site Generator 
+
+---
+
+## In Development:
+
+This software does **NOT** currently support all of the functions listed in this document. This functionality will (hopefully) be available upon the release of v1.0.0.
+
+The information noted here may not be representative of the final software, and only serves to detail the current direction of development. 
+
+The information and the API(s) documented here may change at any time.
+
+---
+
+
+Webgoose is a Static Site Generator designed for Small, Web 1.0 Style Sites. Webgoose doesn't care for Front-End Frameworks, SCSS, Posts, Pagination, or anything like that; only the content, templates, and config.
+
+Webgoose uses Markdown or HTML with YAML Frontmatter, and makes use of the Jinja2 Templating Engine and CMARK-GFM to render pages.
+
+
+## Installation:
+
+Webgoose can be installed by running the following commands:
+
+```
+git clone https://github.com/jeff0282/webgoose
+cd webgoose
+pip3 install .
+```
+
+
+## Usage:
+**[Not Yet Supported]**
+
+``webgoose build`` - The Command To Build The Site in the Current Directory
+
+``webgoose init`` - Initialise a Site in the Current Directory with Defaults (see *"Recommended Site Structure"* in the *"Quick Start"* section)
+
+Other commands may be added in the future!
+
+
+## The Quick Start !!
+
+A (kind of) Quick Intro to making sites with Webgoose!
+
+The ``webgoose init`` command sets up a site with default values that should "just work", allowing you to get started on writing your pages and templates right away!
+
+### Recommended Site Structure:
+
+Below is the recommended directory structure for Webgoose sites, and is the structure set up by the `webgoose init` command by default.
+
+In this recommended config, the **Build Directory** is set to ".", so that the built site is output in the root directory of the site (in this case the `example-site` directory)
+
+```
+# EXTRACT FROM DEFAULT 'config.yaml'
+	
+source_dir: ".source"
+build_dir: "."
+template_dir: ".template"
+default_template: "default.html"
+
+
+# EXAMPLE SITE FOLLOWING ABOVE CONFIG
+│
+| example-site/
+│
+├── .config/
+│   └── style.css
+│
+├── .source/
+│    ├── index.md
+│    ├── about.md
+│    └── static/
+│        ├── style.css
+│        └── image.jpg
+│
+└── .template/
+	├── default.html
+	└── homepage.html
+```
+
+**NOTE:** With this configuration, it is **STRONGLY** recommended to set up your Web Server to **NOT** serve hidden files or directories.
+
+
+### Writing Pages:
+
+With Webgoose, pages are Markdown Files with YAML Frontmatter.
+
+```
+---
+title: Example Page
+description: An Example Page Showing The Basic Layout
+---
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut condimentum et ante in bibendum. Aenean lobortis lorem aliquet tempus mattis. Pellentesque rhoncus rhoncus velit, eget aliquet nibh rhoncus in. Pellentesque mattis enim a purus convallis accumsan. Nam nec lectus ac orci dapibus vulputate. 
+```
+
+In order for these files to be picked up, they must be ".md" files and be placed inside the **Source Directory** (`.source` by default).
+
+HTML inside of the Page Content is also valid, for example.
+
+```
+---
+title: A Page With Both Markdown and HTML
+---
+
+# This is a header
+
+### This is another, smaller header
+
+<div class="img-card">
+	<img src="/static/res/example.jpg">
+	<div>
+		This is some text
+	</div>
+</div>
+```
+
+Webgoose also supports options to disable Markdown conversion on select pages, these options are covered in the *"Page Metadata"* Section.
+
+However, this is **NOT** valid, as Markdown headers must be placed at the start of a line, with no preceding whitespace.
+
+```
+---
+title: A Page With Both Markdown and HTML
+---
+
+<div class="img-card">
+	<img src="/static/res/example.jpg">
+	<div>
+		# This Is An Invalid Markdown Header
+
+		The above header will not be picked up by the Markdown Conversion
+	</div>
+</div>
+```
+
+
+### Page Metadata: 
+
+### Templates:
+
+### Pages vs Static Files:
+
+Webgoose differentiates Pages from Files using only file extensions.
+
+The following files are picked up as pages:
+- `.md`
+- `.webgoose`
+
+Anything else is considered a static file, and is simply copied to its build destination.
+
+Some of these extensions have special meaning, please see the "File Extensions & Their Meanings" Section in the "Less Quick Start" for more info.
+
+
+
+
+## The Less Quick Start !!
+
+This section will introduce some of the more nifty things Webgoose provides, and explain some default behaviours.
+
+The *"Quick Start"* section is **Required Reading** !!!
+
+### The `config.yaml` File:
+
+### File Extensions & Their Meanings:
+
+As covered in the Quick Start, anything that is a `.md` or `.webgoose` file is considered a page.
+
+However, each of these has a special meaning:
+
+- `.md` - Page will be processed normally
+
+- `.webgoose` - The page will be evaluated as potentially multiple pages (see *"Dynamic File Creation"* section)
+
+### How Webgoose Determines Build Paths:
+
+### Using Jinja2 Templating Inside Page Files:
+
+Yes, yes you can !!
+
+You can also use HTML inside of Page Files, cos why not !!
+
+Slight caveat however on the templating stuff, see the *"Render & Output"* section in *"The Build Process"*. In short, the content and template are evaluated separately.
+
+### Templating Variables:
+
+### Extra Templating Filters & Functions:
+**[not sure yet lol]**
+
+### The Abstract Directory Tree:
+**[not sure yet lol]**
+
+### Dynamic File Creation (`.webgoose` files):
+**[not sure yet lol]**
+
+
+
+
+## The Build Process:
+**[Not Yet Fully Implemented]**
+
+When the ``webgoose build`` command is run, Webgoose begins the three stages of the build process:
+
+- Check
+- Load
+- Render & Output
+
+
+### 'Check' Stage:
+
+Before Webgoose builds anything, it'll first check that all is good-to-go.
+
+Webgoose will attempt to locate a config file at (in descending order):
+
+- ``.config/config.yaml``
+- ``.config.yaml``
+
+Failure to find a config file is considered a **Fatal Error**.
+
+If a config file is found, Webgoose will check it for errors, add default values as required.
+
+Should the config be valid, the source, build, and other directories will be tested to see if they exist.
+
+Any errors encountered during these checks is considered **Fatal**.
+
+
+### 'Load' Stage:
+
+The Bread and Butter or Webgoose !!
+
+Using the config file, Webgoose will look inside the **Source Directory** and recursively retrieve all (non-hidden) files.
+
+An Abstract Directory Tree will then be constructed representing the final structure of the site. The tree will contain File and Page objects housing their relevant information. The completed tree will be used to complete the build process, and will be provided to the user in template and page files.
+
+Any errors encountered during this stage is considered **Fatal**.
+
+
+### 'Render & Output' Stage:
+
+At this stage, Webgoose will traverse the completed Abstract Directory Tree, rendering all pages found, and copying/outputting all files & rendered pages to their respective location in the **Build Directory**. The structure of the final site will respect the structure inside the **Source Directory**.
+
+Pages are rendered as follows:
+
+- Page Content is evaluated using Jinja2,
+- Page Content is passed through Markdown-to-HTML converter (unless stated otherwise)
+- Template is loaded and evaluated using Jinja2, with the evaluated page content being passed as a variable
+
+As a result of this, variables declared inside the template cannot be accessed inside the page file, and vice-versa.
+
+Errors related to syntax errors in Templates and Page Files are considered **Non-Fatal**, and will result in the Page being skipped.
+
+Any other errors are considered **Fatal**.

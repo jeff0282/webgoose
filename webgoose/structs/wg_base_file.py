@@ -12,11 +12,10 @@ from typing import Dict, Optional, Union
 
 ARGS = {
 
-    'source_path': [str, True],
-    'build_path': [str, True],
-    'basename': [str, True],
-    'last_mod': [float, True],
-    'ext': [str, True]
+    'source_path': str,
+    'basename': str,
+    'last_mod': float,
+    'ext': str
 
 }
 
@@ -29,32 +28,12 @@ class WGBaseFile:
         """
         Initialise WGBaseFile Object Using Dict Containing File Metadata
 
-        Checks Dict Passed Against 'Golden Dict', Checks Names and Types
-        Discards Unknown Names, Raises Exception If Required Field Missing
+        ## THIS WILL THROW AN EXCEPTION IF THE FILE_META DICT ISN'T VALID ##
         """
 
-        # Loop Through Required Args, Check If Present and Set Attributes Appropriately
-        for arg, arg_info in ARGS.items():
-
-            # Check if Required Arg In Provided Dict
-            if arg in file_meta:
-
-                # Check If Type of Arg In Provided Dict Is Correct
-                if type(file_meta[arg]) != arg_info[0]:
-
-                    raise ValueError(f"Key '{arg}' In The Dict Passed To Type WGBaseFile Must Have A Value Of Type '{arg_info[0]}'")
-
-            # If Required Arg Not Present In Dict, Raise Value Error If Value Required
-            else:
-
-                # If this Key:Value Pair Is Required, Throw Exception
-                if arg_info[1] == True:
-
-                    raise ValueError(f"Dict Passed To Type WGBaseFile Must Contain Key '{arg}")
 
 
-        # If All Ok, Set Self.MetaDict
-        self._meta_dict = file_meta
+        
 
 
 

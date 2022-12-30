@@ -33,8 +33,6 @@ class FileTraverser(object):
         # Final Return List To Be Appended To
         file_list = []
 
-        # Specify Function To Transform Found Paths
-
         if os.path.exists(self.__search_dir):
 
             for (root, dirs, files) in os.walk(self.__search_dir, topdown=True):
@@ -68,7 +66,6 @@ class FileTraverser(object):
         # Combine Root and File_Path
         # (os.walk() returns the directory as part of 'root', we'll need to extract what we need)
         full_path = os.path.join(root, file_path)
-        print(f"the full path is {full_path}, search dir is {self.__search_dir}")
 
         # strip_prefix() Always Removes Leading Slash From Path 
         # (A Path With Prefix Removed Must Be Relative)

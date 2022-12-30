@@ -8,7 +8,7 @@ from webgoose.structs import WGPage
 
 
 
-class WGSite:
+class Site:
 
     def __init__(self, time: float, webgoose_version: str, site_config: Dict[str, Any], all_files: List[WGFile], 
                 pages: List[WGPage], static_files: List[WGFile], data_files: List[WGDataFile]):

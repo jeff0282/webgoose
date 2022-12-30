@@ -81,6 +81,9 @@ def strip_prefix(prefix_dir: str, path: str) -> Union[str,bool]:
     Returns False if prefix_path is not in path
     """
 
+    if prefix_dir == "":
+        return path
+
     # Test Whether Prefix_Dir is a prefix of Path
     if os.path.commonprefix([prefix_dir, path]) != prefix_dir:
         return False
