@@ -1,3 +1,11 @@
+
+#
+# THIS HAS BEEN ALTERED TO WORK WITH WEBGOOSE
+#
+# DO **NOT** COPY PASTE THIS !!!!
+#
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -8,7 +16,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
+/build/
 develop-eggs/
 dist/
 downloads/
