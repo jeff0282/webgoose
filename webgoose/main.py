@@ -13,16 +13,3 @@
 #
 # You should have received a copy of the GNU General Public License 
 # along with Webgoose. If not, see <https://www.gnu.org/licenses/>. 
-
-
-
-#
-# BASIC SCRIPT TO GRAB VERSION STRING FROM PROJECT METADATA
-#
-# Gets the version string from the `pyproject.toml` file
-#
-
-from    importlib.metadata      import      version
-
-__version__ = version("webgoose")
-
