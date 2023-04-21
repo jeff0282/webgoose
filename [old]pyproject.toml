@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 name = "webgoose"
 description = "Static Site Generator"
 requires-python = ">=3.9"
-license = {text = "MIT"}
+license = {text = "GPLv3"}
 version = "0.4.0-dev-R5"
 dynamic = ["dependencies", "readme"]
 
