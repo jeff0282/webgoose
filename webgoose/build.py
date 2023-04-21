@@ -54,7 +54,9 @@ class SiteBuilder:
 
             print(f"going through {path}")
 
-            proccd_dir = Directory.from_path(path, global_context)
+            print(type(parent_dir))
+
+            proccd_dir = Directory.from_path(path, parent_dir, global_context)
             self.__export_dir(proccd_dir)
 
             for subdir in proccd_dir.subdirs:
@@ -62,7 +64,7 @@ class SiteBuilder:
 
         # Start Recursive Traversal of Source Folder
         # Include Global Values
-        rec_helper(SOURCE_DIR, self.globals)
+        rec_helper(SOURCE_DIR, None, self.globals)
 
 
 

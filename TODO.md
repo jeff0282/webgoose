@@ -1,0 +1,6 @@
+-Add Support For None-Template
+-Add Support For Recursive Pages (consider default behaviour and knock-on effects)
+-Add Support For User Provided Jinja2 Filters & Functions
+-Allow For Underscore Syntax In dir.yaml
+-Pick Up Files In Build Dir That Have No Source (deleted pages)
+-Make CLI Front-End (argsparse, etc)

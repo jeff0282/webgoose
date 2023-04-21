@@ -12,7 +12,7 @@ from    webgoose.struct    import      Page
 
 # CONSTANTS
 # > filename/extension defaults
-DIR_INFO_FNAME  = "dir.info"
+DIR_INFO_FNAME  = "dir.yaml"
 PAGE_EXTS       = [".md"]
 
 
@@ -101,7 +101,7 @@ class Directory:
             context.update(global_context)
 
         if parent_dir:
-            rec_pages.update(parent_dir.rec_pages)
+            rec_pages.append(parent_dir.rec_pages)
             context.update(parent_dir.context)
 
 
