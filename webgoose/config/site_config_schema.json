@@ -1,0 +1,40 @@
+{
+    "type" : "object",
+    "properties": {
+        
+        "config" : {
+            "properties" : {
+                "output_dir" : {"type" : "string"}
+            },
+            "required" : ["output_dir"]
+        },
+
+        "tree" : {
+            "type" : "array",
+            "minItems" : 1,
+            "items" : {
+                "type" : "object",
+                "properties" : {
+                    "constr" : {
+                        "type" : "object",
+                        "properties" : {
+                            "builder" : {"type" : "string"},
+                            "render" : {"type" : "bool"},
+                            "allow_globals_additions": {"type" : "bool"},
+                            "params" : {
+                                "type" : "object"
+                            }
+                        },
+                        "required" : ["builder"]
+                    },
+                    "mount_to" : {"type" : "string"}
+                }
+            }
+        },
+
+        "globals" : {
+            "type" : "object"
+        }
+    },
+    "required" : ["config", "tree"]
+}

@@ -1,25 +1,24 @@
-
 config:
   output_dir: "."
-  #other options as required
-
+  force_render_update: true
 
 tree:
-  primary:
-    constr:
-      builder: "webgoose.default_tree_builder"
-      params:
-        source_dir: "./src"
 
-  posts:
-    constr:
-      builder: "my_custom.posts_tree_builder"
-      add_globals: true
-      params:
-        source_dir: "./posts"
-    mount_to: "/posts"
+  # Primary Source Tree
+  constr:
+    builder: "webgoose.tree.PlainTreeBuilder"
+    params:
+      source_dir: "./src"
+
+  # Posts Tree
+  mount_to: "/posts"
+  constr:
+    builder: "webgoose.tree.BlogTreeBuilder"
+    allow_global_additions: true 
+    params:
+      source_dir: "./posts"
 
 
 globals:
-  #user defined global render vars
- 
+  domain: "testdomain.net"
+  email: "webmaster@testdomain.net"
