@@ -9,7 +9,7 @@
             "required" : ["output_dir"]
         },
 
-        "tree" : {
+        "site_tree" : {
             "type" : "array",
             "minItems" : 1,
             "items" : {
@@ -19,8 +19,8 @@
                         "type" : "object",
                         "properties" : {
                             "builder" : {"type" : "string"},
-                            "render" : {"type" : "bool"},
-                            "allow_globals_additions": {"type" : "bool"},
+                            "render" : {"type" : "boolean"},
+                            "allow_globals_additions": {"type" : "boolean"},
                             "params" : {
                                 "type" : "object"
                             }
@@ -28,7 +28,8 @@
                         "required" : ["builder"]
                     },
                     "mount_to" : {"type" : "string"}
-                }
+                },
+                "required" : ["constr"]
             }
         },
 
@@ -36,5 +37,5 @@
             "type" : "object"
         }
     },
-    "required" : ["config", "tree"]
+    "required" : ["config", "site_tree"]
 }

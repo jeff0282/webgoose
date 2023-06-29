@@ -1,0 +1,21 @@
+###
+# (site.yaml) Webgoose Default Site Configuration File
+#
+# The default configuration for a webgoose site defines a 
+# generic site, with a single source tree.
+###
+
+config:
+  output_dir: "./"
+
+site_tree:
+  - primary_tree:
+    constr:
+      builder: "webgoose.tree.PlainTreeBuilder"
+      params:
+        source_dir: "./.src"
+
+globals:
+  domain: "yourdomain.com"
+  webmaster_email: "webmaster@yourdomain.com"
+
