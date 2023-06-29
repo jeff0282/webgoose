@@ -6,18 +6,7 @@ from        pathlib     import      Path
 from        typing      import      Any
 from        typing      import      Dict
 
-from        webgoose.exceptions     import      WebgooseException
-
-
-# Set 'Constant' Location of Site Config Schema
-# > Should be located in the same directory as this module.
-SITE_CONFIG_SCHEMA_LOCATION = Path(__file__).parent.joinpath("site_config_schema.json")
-
-
-class MalformedConfigError(WebgooseException):
-    """Site Config File is unable to be parsed, or does not
-    conform to the site.yaml schema."""
-    pass
+from        webgoose.config     import      SITE_CONFIG_SCHEMA_LOCATION
 
 
 
@@ -37,27 +26,19 @@ class ConfigUtils:
         against a JSON Schema.
 
         MAY THROW THE FOLLOWING EXCEPTIONS:
-            - FileNotFoundError:    if config file at path does not exist
-            - MalformedConfigError: if config cannot be parsed or does not adhere to schema
+            - FileNotFoundError:            if config file at path does not exist
+            - yaml.YAMLError:               if the config file cannot be parsed by pyyaml
+            - jsonschema.ValidationError:   if the config file doesn't adhere to the schema
         """
 
-        try:
-            # Get config As Dict from YAML File
-            # NOTE: FileNotFoundError is __NOT__ handled here
-            config_dict = ConfigUtils.__read_yaml(config_file_path)
+        # Get config As Dict from YAML File
+        config_dict = ConfigUtils.__read_yaml(config_file_path)
 
-            # Validate the above Dict against JSONSchema
-            ConfigUtils.__validate_against_schema(config_dict)
+        # Validate the above Dict against JSONSchema
+        ConfigUtils.__validate_against_schema(config_dict)
 
-        except yaml.YAMLError as yaml_error:
-            raise MalformedConfigError from yaml_error
-
-        except jsonschema.ValidationError as json_error:
-            raise MalformedConfigError from json_error
-        
-        # If the above all checks out, return the config dict
+        # Return resulting dict
         return config_dict
-
 
 
 
