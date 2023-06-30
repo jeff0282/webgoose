@@ -35,28 +35,15 @@ class ConfigUtils:
         config_dict = ConfigUtils.__read_yaml(config_file_path)
 
         # Validate the above Dict against JSONSchema
-        ConfigUtils.__validate_against_schema(config_dict)
+        ConfigUtils.validate_against_schema(config_dict)
 
         # Return resulting dict
         return config_dict
-
+    
 
 
     @staticmethod
-    def __read_yaml(config_file_path: Path) -> Dict[str, Any]:
-
-        """
-        Get Dict from Yaml File
-
-        Throws FileNotFoundError if the yaml file is not found
-        """
-
-        with config_file_path.open("r", encoding="utf-8") as file:
-            return yaml.safe_load(file)
-        
-
-    @staticmethod
-    def __validate_against_schema(config_dict: Dict[str, Any]) -> None:
+    def validate_against_schema(config_dict: Dict[str, Any]) -> None:
 
         """
         Validate a provided site.yaml as a Dict against a JSON schema.
@@ -75,3 +62,17 @@ class ConfigUtils:
             schema = json.load(schema_file)
 
         jsonschema.validate(config_dict, schema=schema)
+
+
+
+    @staticmethod
+    def __read_yaml(config_file_path: Path) -> Dict[str, Any]:
+
+        """
+        Get Dict from Yaml File
+
+        Throws FileNotFoundError if the yaml file is not found
+        """
+
+        with config_file_path.open("r", encoding="utf-8") as file:
+            return yaml.safe_load(file)

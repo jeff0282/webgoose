@@ -8,6 +8,7 @@ from        typing                  import      Any
 from        typing                  import      Dict
 
 from        webgoose.config         import      ConfigUtils
+from        webgoose.tree.structs   import      Directory
 
 
 # Get Logger Instance for this module
@@ -66,7 +67,7 @@ class Site:
 
 
 
-    def __build_tree(self) -> Tree:
+    def __build_tree(self) -> Directory:
         pass
 
 
