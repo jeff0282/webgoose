@@ -1,40 +1,74 @@
 {
+    "title" : "site_yaml_schema",
+    "description" : "Schema for Webgoose site.yaml config files",
     "type" : "object",
-    "properties": {
-        
+    "properties" : {
         "config" : {
+            "type" : "object",
+            "description" : "Global config options for the site",
             "properties" : {
-                "output_dir" : {"type" : "string"}
+                "output_dir" : {
+                    "type" : "string",
+                    "description" : "The path to output the built site to"
+                }
             },
             "required" : ["output_dir"]
         },
 
         "site_tree" : {
             "type" : "array",
+            "description" : "Definitions of trees to be used together to create the build tree, processed top-to-bottom",
             "minItems" : 1,
             "items" : {
                 "type" : "object",
                 "properties" : {
-                    "constr" : {
-                        "type" : "object",
-                        "properties" : {
-                            "builder" : {"type" : "string"},
-                            "render" : {"type" : "boolean"},
-                            "allow_globals_additions": {"type" : "boolean"},
-                            "params" : {
-                                "type" : "object"
-                            }
-                        },
-                        "required" : ["builder"]
+                    "builder" : {
+                        "type" : "string",
+                        "description" : "Short String name of a default, pre-made tree builder, has precedence over 'construct'"
                     },
-                    "mount_to" : {"type" : "string"}
+                    "construct" : {
+                        "type" : "object",
+                        "description" : "Allows for custom definitions of trees. Cannot be present if 'builder' is defined",
+                        "properties" : {
+                            "builder_class" : {
+                                "type" : "string",
+                                "description" : "The class responsible for building this tree"
+                            },
+                            "allow_global_additions" : {
+                                "type" : "boolean",
+                                "description" : "Whether or not Webgoose should ask the 'builder_class' for globals (calls builder_cls.globals() after the tree is built"
+                            },
+                            "params" : {
+                                "type" : "object",
+                                "description" : "Keyword arguments that will be passed to the builder_class, order should NOT matter"
+                            }
+                        }
+                    },
+                    "mount_to" : {
+                        "type" : "string",
+                        "description" : "The string URI this tree should be mounted to on the full site_tree"
+                    }
                 },
-                "required" : ["constr"]
+                "if" : {
+                    "description" : "Conditonal Check to see if the 'builder' field is set",
+                    "properties" : {
+                        "builder" : {"type" : "string"}
+                    }
+                },
+                "then" : {
+                    "description" : "If the 'builder' field is set, the 'construct' field must NOT be present",
+                    "not" : {"required" : ["construct"]}
+                },
+                "else" : {
+                    "description" : "If the 'builder field is NOT set, 'construct' is REQUIRED",
+                    "required" : ["construct"]
+                }
             }
         },
 
         "globals" : {
-            "type" : "object"
+            "type" : "object",
+            "description" : "User-defined objects made available to site renderers"
         }
     },
     "required" : ["config", "site_tree"]
