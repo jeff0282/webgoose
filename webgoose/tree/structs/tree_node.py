@@ -18,14 +18,12 @@ class TreeNode:
 
     def __init__(self, 
                  name: str, 
-                 parent: Optional['TreeNode'], 
-                 **kwargs: Dict[str, Any]) -> None:
+                 parent: Optional['TreeNode']) -> None:
 
         """
         Base class for Webgoose site tree nodes.
 
-        Takes a name, parent node (optionally), and any user-defined keyword arguments
-        Keyword arguments will be available as object attributes, and WILL OVERRIDE attributes if already set
+        Takes a name, parent node (optionally)
         """
 
         self.__name: str
