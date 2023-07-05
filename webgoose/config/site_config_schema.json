@@ -24,7 +24,7 @@
                 "properties" : {
                     "builder" : {
                         "type" : "string",
-                        "description" : "Short String name of a default, pre-made tree builder, has precedence over 'construct'"
+                        "description" : "Short string name of a default, pre-made tree builder, has precedence over 'construct'"
                     },
                     "construct" : {
                         "type" : "object",
