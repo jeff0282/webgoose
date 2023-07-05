@@ -1,7 +1,9 @@
 
 from    typing      import      Any
 from    typing      import      Dict
+from    typing      import      Generator
 from    typing      import      Optional
+from    typing      import      Tuple
 from    typing      import      Type
 from    typing      import      Union
 
@@ -26,13 +28,15 @@ class TreeNode:
         This class should NOT be used directly, instead use via a subclass.
         """
 
-        # Set Name and Parent, and Check Validity of Both
-        self.set_name(name)
-        self.set_parent(parent)
+        # Set some initial default values
+        # (some of the setters expect the attrs to exist)
+        self.__name:        str                 = ""
+        self.__parent:      Type['TreeNode']    = None
 
-        # Set Other Private Instance Vars
-        self.__parent   = parent
-        self.__metadata = metadata
+        # Set provided params
+        self.set_name(name) 
+        self.set_parent(parent)
+        self.metadata = metadata
 
 
     #
@@ -83,13 +87,8 @@ class TreeNode:
         May NOT represent the raw name.
         """
         return self.__name
-    
-
-    @property
-    def raw_name(self) -> str:
-        """ Returns the raw, unaltered name of a node """
-        return self.__name
         
+
 
     @name.setter
     def set_name(self, new_name) -> None:
@@ -104,12 +103,14 @@ class TreeNode:
         self.__name = new_name
 
 
+
     @property
     def parent(self) -> Union[Type['TreeNode'], None]:
         """ Return the parent node of this node """
 
         return self.__parent
     
+
 
     @parent.setter
     def set_parent(self, new_parent: Union[Type['TreeNode'], None]) -> None:
@@ -120,11 +121,7 @@ class TreeNode:
         new parent.
         """
 
-        # If parent isn't already set, set it to default value
-        if not hasattr(self, "__parent"):
-            self.__parent = None
-        
-        # If new parent is 'None', .unlink() fully and return
+        # If new parent is None, just unlink
         if not new_parent:
             return self.unlink()
         
@@ -132,11 +129,14 @@ class TreeNode:
         # (if new_parent doesn't have .add(), it cannot take children)
         try:
             new_parent.add(self)
+
         except AttributeError as e:
             raise ValueError(f"Node '{new_parent}' cannot take children") from e
         
-        # If all goes well above, set parent to new parent
+        # If all goes well above, unlink from old parent and set new
+        self.unlink()
         self.__parent = new_parent
+
 
 
     @property
@@ -147,22 +147,41 @@ class TreeNode:
         Returns in the form (root, ... , this node)
         """
 
-        stack = [self]
-        current_node = self.parent
+        return tuple(reversed(self.__gen_traverse_up()))
 
-        while(current_node):
-            stack.push(current_node)
-            current_node = current_node.parent
-
-        return tuple(stack)
 
 
     @property
     def path(self) -> str:
         """ Return full path from root to this node """
 
-        return self.PATH_DELIMITER.join(part.raw_name for part in self.parts)
-    
+        return self.PATH_DELIMITER.join(part.name for part in self.parts)
+
+
+
+    def rel_parts(self, relative_to: Type['TreeNode']) -> Tuple(Type['TreeNode']):
+        """ Same as .parts but relative to any node between this node and root """
+
+        stack = []
+        current_node = self
+
+        try:
+            while(True):
+                stack.push(current_node)
+                if current_node is relative_to:
+                    return tuple(stack)
+                
+                current_node = current_node.parent
+
+        except StopIteration:
+            raise ValueError(f"Node '{relative_to}' does not exist between this node '{self}' and root")
+
+
+
+    def rel_path(self, relative_to: Type['TreeNode']) -> str:
+        """ Same as .path but relative to any node between this and root"""
+
+        return self.PATH_DELIMITER.join(part.name for part in self.rel_parts(relative_to))    
 
 
     def unlink(self) -> None:
@@ -171,7 +190,7 @@ class TreeNode:
         if self.parent:
             self.parent.__remove_child(self)
 
-        # set using private parent attr
+        # set using private parent attr to avoid recursion
         # (.set_parent(None) calls this method)
         self.__parent = None
 
@@ -186,3 +205,13 @@ class TreeNode:
 
         # TODO !!
         return bool(name)
+
+
+    def __gen_traverse_up(self) -> Generator['TreeNode']:
+        """ Generator that traverses up a tree to root """
+
+        current_node = self.parent
+
+        while(current_node):
+            yield current_node
+            current_node = current_node.parent
