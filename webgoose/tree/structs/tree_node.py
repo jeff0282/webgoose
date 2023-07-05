@@ -184,5 +184,5 @@ class TreeNode:
     def __name_is_valid(self, name: str) -> bool:
         """ Check if a name is valid for this type of node """
 
-        # TODO !!!!!
+        # TODO !!
         return bool(name)
