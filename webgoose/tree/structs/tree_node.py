@@ -1,11 +1,13 @@
 
+import  os
+
 from    typing      import      Any
 from    typing      import      Dict
 from    typing      import      Generator
+from    typing      import      List
 from    typing      import      Optional
 from    typing      import      Tuple
 from    typing      import      Type
-from    typing      import      Union
 
 
 class TreeNode:
@@ -15,27 +17,29 @@ class TreeNode:
     Implements a singly linked, file system like tree.
     """
 
+    PATH_DELIMITER = "/"
+
     def __init__(self,
                 name:       str,
                 parent:     Optional[Type['TreeNode']]  = None,
-                metadata:   Optional[Dict[str, Any]]    = dict()) -> None:
+                metadata:   Dict[str, Any]              = dict()) -> None:
         """
         Create a site tree TreeNode object.
 
         Takes a unix-valid filename and (optionally) a parent node and metadata.
         The metadata dict is proxied out as keys of an instance.
 
-        This class should NOT be used directly, instead use via a subclass.
+        This class CANNOT (really) and SHOULD NOT be used directly, instead use via subclasses.
         """
 
         # Set some initial default values
-        # (some of the setters expect the attrs to exist)
-        self.__name:        str                 = ""
-        self.__parent:      Type['TreeNode']    = None
+        # (some of the property setters expect the attrs to exist)
+        self._name_stack: List[str] = []
+        self._parent: Optional[Type['TreeNode']] = None
 
         # Set provided params
-        self.set_name(name) 
-        self.set_parent(parent)
+        self.name = name
+        self.parent = parent
         self.metadata = metadata
 
 
@@ -46,32 +50,44 @@ class TreeNode:
     def __getitem__(self, key: str) -> Any:
         """ Allow proxying of metadata to keys of an instance """
 
-        return self.__metadata[key]
+        return self.metadata[key]
 
     
     def __setitem__(self, key: str, value: Any) -> None:
         """ Allow proxied metadata keys to be set """
 
-        self.__metadata[key] = value
+        self.metadata[key] = value
 
 
     def __delitem__(self, key: str) -> None:
         """ Allow deletion of proxied metadata keys """
 
-        self.__metadata[key].pop()
+        self.metadata[key].pop()
 
 
     def __del__(self) -> None:
         """ Ensure references of this instance in parent nodes are clearer before deletion """
 
         if self.parent:
-            self.unlink()
+            self.unlink(quiet=True)
 
 
     def __str__(self) -> str:
         """ Return string version of TreeNodes as ClassName(<path>) """
 
-        return f"{self.__class__.__name__('{self.path}')}"
+        return f"{self.__class__.__name__}('{self.path}')"
+    
+
+    def __repr__(self) -> str:
+        """ Make instance string human readable """
+
+        return self.__str__()
+    
+
+    def __bool__(self) -> bool:
+        """ TreeNode objects should NEVER be falsey """
+        
+        return True
     
 
 
@@ -82,60 +98,108 @@ class TreeNode:
     @property
     def name(self) -> str:
         """
-        Returns the Human Readable name of a node.
+        The current name of a node
 
-        May NOT represent the raw name.
+        May differ from that set at instantiation if this node
+        as been mounted to another tree
         """
-        return self.__name
+        return self._name_stack[-1]
         
 
 
     @name.setter
-    def set_name(self, new_name) -> None:
+    def name(self, new_name: str) -> None:
         """
         Set a new name for a node.
 
         Throws a ValueError if the name is invalid
         """
-        if not self.__name_is_valid(new_name):
+        
+        if not self._name_is_valid(new_name):
             raise ValueError(f"The name '{new_name}' is invalid for node type '{self.__class__.__name__}'")
         
-        self.__name = new_name
+        # If name stack if empty, simply add it
+        # otherwise, replace the last item in the list with the new name
+        if self._name_stack:
+            self._name_stack[-1] = new_name
+        
+        else:
+            self._name_stack.append(new_name)
+
+
+    
+    @property
+    def ext(self) -> str:
+        """
+        Get the extension from the node name
+        """
+
+        _, ext = os.path.splitext(self.name)
+        return ext
+
+
+    
+    @ext.setter
+    def ext(self, new_ext: str) -> None:
+        """
+        Change the extension of the node's name
+        """
+
+        if not new_ext[0] == ".":
+            raise ValueError(f"Invalid Extension '{new_ext}'")
+
+        # Name property setter checks full name
+        self.name = self.basename + new_ext
+
+
+    @property
+    def basename(self) -> str:
+        """
+        Get the basename from the node name
+        """
+
+        basename, _ = os.path.splitext(self.name)
+        return basename
+    
+
+    @basename.setter
+    def basename(self, new_basename: str) -> None:
+        """
+        Change the base of the node's name
+        """
+
+        # Name property setter checks full name
+        self.name = new_basename + self.ext
 
 
 
     @property
-    def parent(self) -> Union[Type['TreeNode'], None]:
+    def parent(self) -> Optional[Type['TreeNode']]:
         """ Return the parent node of this node """
 
-        return self.__parent
+        return self._parent
     
 
 
     @parent.setter
-    def set_parent(self, new_parent: Union[Type['TreeNode'], None]) -> None:
+    def parent(self, new_parent: Optional[Type['TreeNode']]) -> None:
         """
         Set a new parent for this node.
 
-        Performs all necessary linking and unlinking from old parent to
-        new parent.
+        Just attempts to ask the new parent to add this instance to it.
         """
-
-        # If new parent is None, just unlink
-        if not new_parent:
-            return self.unlink()
         
-        # If new parent is a TreeNode, attempt to add this instance to it
-        # (if new_parent doesn't have .add(), it cannot take children)
+        # If the new_parent is None, just unlink
+        if not new_parent:
+            return self.unlink(True)
+        
+        # Otherwise, attempt to add this node to the new_parent
         try:
             new_parent.add(self)
 
+        # If an exception is raised here, the node should be unaffected
         except AttributeError as e:
             raise ValueError(f"Node '{new_parent}' cannot take children") from e
-        
-        # If all goes well above, unlink from old parent and set new
-        self.unlink()
-        self.__parent = new_parent
 
 
 
@@ -147,7 +211,11 @@ class TreeNode:
         Returns in the form (root, ... , this node)
         """
 
-        return tuple(reversed(self.__gen_traverse_up()))
+        parts = [self]
+        for node in self._gen_traverse_up():
+            parts = [node, *parts]
+        
+        return parts
 
 
 
@@ -159,7 +227,7 @@ class TreeNode:
 
 
 
-    def rel_parts(self, relative_to: Type['TreeNode']) -> Tuple(Type['TreeNode']):
+    def rel_parts(self, relative_to: Type['TreeNode']) -> Tuple[Type['TreeNode']]:
         """ Same as .parts but relative to any node between this node and root """
 
         stack = []
@@ -167,7 +235,7 @@ class TreeNode:
 
         try:
             while(True):
-                stack.push(current_node)
+                stack.append(current_node)
                 if current_node is relative_to:
                     return tuple(stack)
                 
@@ -184,15 +252,21 @@ class TreeNode:
         return self.PATH_DELIMITER.join(part.name for part in self.rel_parts(relative_to))    
 
 
-    def unlink(self) -> None:
+
+    def unlink(self, quiet: bool = False) -> None:
         """ Unlinks this node from it's parent """
 
-        if self.parent:
-            self.parent.__remove_child(self)
+        # If no parent, just exit
+        # raise exception, unless quiet is True
+        if not self.parent:
+            if quiet:
+                return 
+            
+            raise Exception("Node has no parent")
+        
 
-        # set using private parent attr to avoid recursion
-        # (.set_parent(None) calls this method)
-        self.__parent = None
+        # Request that the parent remove this node from itself
+        self.parent._unlink_node(self)
 
 
 
@@ -200,15 +274,19 @@ class TreeNode:
     # Private API
     # ---
 
-    def __name_is_valid(self, name: str) -> bool:
+    def _name_is_valid(self, name: str) -> bool:
         """ Check if a name is valid for this type of node """
 
         # TODO !!
         return bool(name)
 
 
-    def __gen_traverse_up(self) -> Generator['TreeNode']:
-        """ Generator that traverses up a tree to root """
+    def _gen_traverse_up(self) -> Generator['TreeNode', None, None]:
+        """ 
+        Generator that traverses up a tree to root 
+        
+        First item is the PARENT of a node, NOT the node itself
+        """
 
         current_node = self.parent
 

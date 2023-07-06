@@ -6,6 +6,7 @@ Tests for the site tree Directory Node, which implements the
 full, doubly-linked tree functionality.
 """
 
+
 def test_parts():
 
     """
@@ -18,7 +19,7 @@ def test_parts():
     (root, ... inbetween elements ... , instance)
     """
 
-    pass
+    
 
 
 def test_path():
