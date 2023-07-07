@@ -8,6 +8,7 @@ from    typing      import      List
 from    typing      import      Optional
 from    typing      import      Tuple
 from    typing      import      Type
+from    typing      import      Union
 
 
 class TreeNode:
@@ -20,7 +21,7 @@ class TreeNode:
     PATH_DELIMITER = "/"
 
     def __init__(self,
-                name:       str,
+                name:       Union[Tuple[str, str], str],
                 parent:     Optional[Type['TreeNode']]  = None,
                 metadata:   Dict[str, Any]              = dict()) -> None:
         """
@@ -34,7 +35,7 @@ class TreeNode:
 
         # Set some initial default values
         # (some of the property setters expect the attrs to exist)
-        self._name_stack: List[str] = []
+        self._name_stack: List[Tuple[str]] = []
         self._parent: Optional[Type['TreeNode']] = None
 
         # Set provided params
@@ -103,28 +104,33 @@ class TreeNode:
         May differ from that set at instantiation if this node
         as been mounted to another tree
         """
-        return self._name_stack[-1]
+        return "".join(self._name_stack[-1])
         
 
 
     @name.setter
-    def name(self, new_name: str) -> None:
+    def name(self, new_name: Union[Tuple[str, str], str]) -> None:
         """
         Set a new name for a node.
 
         Throws a ValueError if the name is invalid
         """
         
-        if not self._name_is_valid(new_name):
+        # split name into basename and extension
+        # if string, use splitext() to create (basename, ext) tuple
+        base, ext = new_name if type(new_name) == tuple else os.path.splitext(new_name)
+
+        # check if name is valid
+        if not self._name_is_valid(base + ext):
             raise ValueError(f"The name '{new_name}' is invalid for node type '{self.__class__.__name__}'")
         
         # If name stack if empty, simply add it
         # otherwise, replace the last item in the list with the new name
         if self._name_stack:
-            self._name_stack[-1] = new_name
+            self._name_stack[-1] = (base, ext)
         
         else:
-            self._name_stack.append(new_name)
+            self._name_stack.append((base, ext))
 
 
     
@@ -134,8 +140,7 @@ class TreeNode:
         Get the extension from the node name
         """
 
-        _, ext = os.path.splitext(self.name)
-        return ext
+        return self._name_stack[-1][1]
 
 
     
@@ -143,13 +148,19 @@ class TreeNode:
     def ext(self, new_ext: str) -> None:
         """
         Change the extension of the node's name
+
+        File extension can be removed by setting it to the empty string
         """
 
-        if not new_ext[0] == ".":
-            raise ValueError(f"Invalid Extension '{new_ext}'")
+        # If string isn't empty, check if the first char is a dot
+        # if not, the extension isn't valid
+        if new_ext:
+            if new_ext[0] != ".":
+                raise ValueError(f"Invalid Extension '{new_ext}', did you mean '.{new_ext}'?")
 
         # Name property setter checks full name
-        self.name = self.basename + new_ext
+        # if new_ext is "", name will just be basename
+        self.name = (self.basename, new_ext)
 
 
     @property
@@ -158,8 +169,7 @@ class TreeNode:
         Get the basename from the node name
         """
 
-        basename, _ = os.path.splitext(self.name)
-        return basename
+        return self._name_stack[-1][0]
     
 
     @basename.setter
@@ -169,7 +179,7 @@ class TreeNode:
         """
 
         # Name property setter checks full name
-        self.name = new_basename + self.ext
+        self.name = (new_basename, self.ext)
 
 
 
@@ -230,19 +240,15 @@ class TreeNode:
     def rel_parts(self, relative_to: Type['TreeNode']) -> Tuple[Type['TreeNode']]:
         """ Same as .parts but relative to any node between this node and root """
 
-        stack = []
-        current_node = self
+        parts = [self]
+        for node in self._gen_traverse_up():
+            parts = [node, *parts]
 
-        try:
-            while(True):
-                stack.append(current_node)
-                if current_node is relative_to:
-                    return tuple(stack)
-                
-                current_node = current_node.parent
+            if node is relative_to:
+                return parts
 
-        except StopIteration:
-            raise ValueError(f"Node '{relative_to}' does not exist between this node '{self}' and root")
+        # If not yet returned, node wasn't found
+        raise ValueError(f"Node '{relative_to}' does not exist between this node '{self}' and root")
 
 
 
