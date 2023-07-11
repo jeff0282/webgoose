@@ -128,7 +128,7 @@ class Directory(TreeNode):
 
 
         # check if node with name already exists
-        if self.get(node.name, True):
+        if self.has(node.name):
             raise ValueError(f"Node with name '{node.name}' already exists as a child of node '{self}'")
 
         print("ADDING NODE")
