@@ -3,17 +3,25 @@
 #
 # The default configuration for a webgoose site defines a 
 # generic site, with a single source tree.
-###
+###constr:
+      builder: "webgoose.tree.PlainTreeBuilder"
+      params:
+        source_dir: "./.src"
 
 config:
   output_dir: "./"
 
 site_tree:
   - primary_tree:
+    builder: default
+
+  - posts_tree:
     constr:
-      builder: "webgoose.tree.PlainTreeBuilder"
+      builder: "webgoose.tree.PostsTreeBuilder"
       params:
-        source_dir: "./.src"
+        source_dir: "./.posts"
+
+    mount_to: "/this/is/a/random/path/posts "
 
 globals:
   domain: "yourdomain.com"

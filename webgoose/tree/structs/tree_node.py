@@ -18,10 +18,12 @@ class TreeNode:
     Implements a singly linked, file system like tree.
     """
 
-    PATH_DELIMITER = "/"
+    PATH_DELIMITER = os.sep
+    EXT_DELIMITER  = os.extsep
+
 
     def __init__(self,
-                name:       Union[Tuple[str, str], str],
+                name:       Union[Tuple[str, ...], str],
                 parent:     Optional[Type['TreeNode']]  = None,
                 metadata:   Dict[str, Any]              = dict()) -> None:
         """
@@ -33,8 +35,7 @@ class TreeNode:
         This class CANNOT (really) and SHOULD NOT be used directly, instead use via subclasses.
         """
 
-        # Set some initial default values
-        # (some of the property setters expect the attrs to exist)
+        # Set 'private' instance vars to default values
         self._name_stack: List[Tuple[str]] = []
         self._parent: Optional[Type['TreeNode']] = None
 
@@ -47,23 +48,6 @@ class TreeNode:
     #
     # Dunder Methods
     # ---
-
-    def __getitem__(self, key: str) -> Any:
-        """ Allow proxying of metadata to keys of an instance """
-
-        return self.metadata[key]
-
-    
-    def __setitem__(self, key: str, value: Any) -> None:
-        """ Allow proxied metadata keys to be set """
-
-        self.metadata[key] = value
-
-
-    def __delitem__(self, key: str) -> None:
-        """ Allow deletion of proxied metadata keys """
-
-        self.metadata[key].pop()
 
 
     def __del__(self) -> None:
@@ -96,90 +80,72 @@ class TreeNode:
     # Public API
     # ---
 
+
     @property
     def name(self) -> str:
-        """
-        The current name of a node
+        """ Return the full name of this node """
 
-        May differ from that set at instantiation if this node
-        as been mounted to another tree
-        """
-        return "".join(self._name_stack[-1])
-        
+        return self._name_stack[-1]
+    
 
 
     @name.setter
-    def name(self, new_name: Union[Tuple[str, str], str]) -> None:
-        """
-        Set a new name for a node.
+    def name(self, new_name: Union[Tuple[str, ...], str]) -> None:
+        """ Change name of this node """
 
-        Throws a ValueError if the name is invalid
-        """
-        
-        # split name into basename and extension
-        # if string, use splitext() to create (basename, ext) tuple
-        base, ext = new_name if type(new_name) == tuple else os.path.splitext(new_name)
+        # Check if name is valid
+        if not self._name_is_valid(new_name):
+            raise ValueError(f"The name '{new_name}' is not valid for node '{self.__class__.__name__}'")
 
-        # check if name is valid
-        if not self._name_is_valid(base + ext):
-            raise ValueError(f"The name '{new_name}' is invalid for node type '{self.__class__.__name__}'")
-        
-        # If name stack if empty, simply add it
-        # otherwise, replace the last item in the list with the new name
-        if self._name_stack:
-            self._name_stack[-1] = (base, ext)
-        
-        else:
-            self._name_stack.append((base, ext))
+        # If node has a parent, check for potential name conflict
+        if self.parent:
+            if self.parent.has(new_name):
+                raise ValueError(f"The parent node '{self.parent}' already has a child with name '{new_name}'")
 
+        # If no exception raised, change the name
+        # (name stack may be empty, so we check that the length is truthy before popping)
+        self._name_stack.pop() if len(self._name_stack) else None
+        self._name_stack.append(new_name)
 
-    
-    @property
-    def ext(self) -> str:
-        """
-        Get the extension from the node name
-        """
-
-        return self._name_stack[-1][1]
-
-
-    
-    @ext.setter
-    def ext(self, new_ext: str) -> None:
-        """
-        Change the extension of the node's name
-
-        File extension can be removed by setting it to the empty string
-        """
-
-        # If string isn't empty, check if the first char is a dot
-        # if not, the extension isn't valid
-        if new_ext:
-            if new_ext[0] != ".":
-                raise ValueError(f"Invalid Extension '{new_ext}', did you mean '.{new_ext}'?")
-
-        # Name property setter checks full name
-        # if new_ext is "", name will just be basename
-        self.name = (self.basename, new_ext)
 
 
     @property
     def basename(self) -> str:
-        """
-        Get the basename from the node name
-        """
-
-        return self._name_stack[-1][0]
-    
-
-    @basename.setter
-    def basename(self, new_basename: str) -> None:
-        """
-        Change the base of the node's name
+        """ 
+        Return the basename of this node; the filename without extensions
+        
+        For example: 
+            - index.html        > index
+            - .hidden_file.txt  > .hidden_file
         """
 
-        # Name property setter checks full name
-        self.name = (new_basename, self.ext)
+        return self._split_name(self.name)[0]
+
+
+
+    @property
+    def exts(self) -> Tuple[str]:
+        """
+        Return the file extensions as a tuple of strings
+
+        For example: "file.tar.gz" -> ["tar", "gz"]
+        """
+
+        return self._split_name(self.name)[1]
+
+
+
+    @property
+    def ext(self) -> str:
+        """
+        Return the file extensions as a string joined by the
+        extension delimiter
+
+        For example: "file.tar.gz" -> ".tar.gz"
+        """
+
+        exts = self._split_name(self.name)[1]
+        return self.EXT_DELIMITER + self.EXT_DELIMITER.join(exts)
 
 
 
@@ -279,6 +245,31 @@ class TreeNode:
     #
     # Private API
     # ---
+
+    def _split_name(self, name: str) -> Tuple[str, Tuple[str, ...]]: 
+        """ Split a name by basename and extensions """
+
+        # seperate the filename by the extension delimiter
+        # (the list created here will always have len > 0)
+        fname_parts = self.name.split(self.EXT_DELIMITER)
+        
+
+        # if only one name parts, no extensions
+        if len(fname_parts) == 1:
+            return tuple(fname_parts[0], tuple())
+
+        # Otherwise, length > 1,
+        # if first item is "", this must be a hidden file name (".hidden_file")
+        # in this case, extensions are the 3rd and subsequent fname parts 
+        if fname_parts[0] == "":
+            basename = self.EXT_DELIMITER.join(fname_parts[:2])
+            return (basename, tuple(fname_parts[2:]))
+        
+        # If not hidden file, first name_part must be the basename
+        # exrs are 2nd and subsequent fname parts
+        return (fname_parts[0], tuple(fname_parts[1:]))
+
+
 
     def _name_is_valid(self, name: str) -> bool:
         """ Check if a name is valid for this type of node """

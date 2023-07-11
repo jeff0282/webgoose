@@ -6,6 +6,7 @@ from    typing      import      List
 from    typing      import      Optional
 from    typing      import      Tuple
 from    typing      import      Type
+from    typing      import      Union
 
 from    webgoose.tree.structs   import  TreeNode
 
@@ -15,7 +16,7 @@ class Directory(TreeNode):
 
 
     def __init__(self,
-                 name:      str,
+                 name:      Union[Tuple[str, ...], str],
                  parent:    Optional[Type[TreeNode]]    = None,
                  metadata:  Dict[str, Any]              = dict(),
                  children:  Tuple[Type[TreeNode]]       = tuple()) -> None:
@@ -65,9 +66,25 @@ class Directory(TreeNode):
         """ Get this node's children """
 
         return tuple(self._children)
+    
 
+
+    @property
+    def dirs(self):
+        """ Get all children that are an instance of Directory """
+
+        return tuple(child for child in self._children if isinstance(child, Directory))
+    
+
+
+    @property
+    def files(self):
+        """ Get all children that are not a Directory """
+
+        return tuple(child for child in self._children if not isinstance(child, Directory))
 
     
+
     def add(self, *nodes_to_add: Tuple[Type[TreeNode]]) -> None:
         """ Add N number of nodes as children of this node """
 
@@ -92,6 +109,13 @@ class Directory(TreeNode):
         
         # if match found, return it
         return match[0]
+    
+    
+
+    def has(self, node_strname: str) -> bool:
+        """ Check if this node has a child node with a certain name """
+
+        return bool(self.get(node_strname, True))
 
     
 
