@@ -10,6 +10,12 @@ from    typing      import      Tuple
 from    typing      import      Type
 from    typing      import      Union
 
+from    webgoose.tree.structs   import  DuplicateChildNameError
+from    webgoose.tree.structs   import  InvalidNameError
+from    webgoose.tree.structs   import  InvalidParentError
+from    webgoose.tree.structs   import  NodeNotFoundError
+
+
 
 class TreeNode:
     """
@@ -18,12 +24,13 @@ class TreeNode:
     Implements a singly linked, file system like tree.
     """
 
+    # Class Constants
     PATH_DELIMITER = os.sep
     EXT_DELIMITER  = os.extsep
 
 
     def __init__(self,
-                name:       Union[Tuple[str, ...], str],
+                name:       str,
                 parent:     Optional[Type['TreeNode']]  = None,
                 metadata:   Dict[str, Any]              = dict()) -> None:
         """
@@ -36,13 +43,13 @@ class TreeNode:
         """
 
         # Set 'private' instance vars to default values
-        self._name_stack: List[Tuple[str]] = []
         self._parent: Optional[Type['TreeNode']] = None
 
-        # Set provided params
-        self.name = name
-        self.parent = parent
-        self.metadata = metadata
+        # Set provided params using provided setters
+        # (subclasses may set these differently)
+        self.name: str = name
+        self.parent: Optional['TreeNode'] = parent
+        self.metadata: Dict[str, Any] = metadata
 
 
     #
@@ -85,27 +92,43 @@ class TreeNode:
     def name(self) -> str:
         """ Return the full name of this node """
 
-        return self._name_stack[-1]
+        return self._name
     
 
 
     @name.setter
-    def name(self, new_name: Union[Tuple[str, ...], str]) -> None:
+    def name(self, new_name: str) -> None:
         """ Change name of this node """
 
         # Check if name is valid
         if not self._name_is_valid(new_name):
-            raise ValueError(f"The name '{new_name}' is not valid for node '{self.__class__.__name__}'")
+            raise InvalidNameError(f"The name '{new_name}' is not valid for node '{self.__class__.__name__}'")
 
         # If node has a parent, check for potential name conflict
         if self.parent:
-            if self.parent.has(new_name):
-                raise ValueError(f"The parent node '{self.parent}' already has a child with name '{new_name}'")
 
-        # If no exception raised, change the name
-        # (name stack may be empty, so we check that the length is truthy before popping)
-        self._name_stack.pop() if len(self._name_stack) else None
-        self._name_stack.append(new_name)
+            # keep by some details incase we need to revert
+            parent = self.parent
+            old_name = self.name
+
+            # unlink from current parent
+            self.unlink(quiet=True)
+
+            # change name and attempt to add back to parent
+            self._change_name(new_name)
+            try:
+                parent.add(self)
+
+            # if parent finds a naming conflict, catch exception, restore old name,
+            # and raise error afterwards (not dodgy at all :3)
+            except DuplicateChildNameError as e:
+                self._change_name(old_name)
+                parent.add(self)
+                raise e
+
+        # if no parent, just change the name
+        else:
+            self._change_name(new_name)
 
 
 
@@ -145,7 +168,7 @@ class TreeNode:
         """
 
         exts = self._split_name(self.name)[1]
-        return self.EXT_DELIMITER + self.EXT_DELIMITER.join(exts)
+        return self.EXT_DELIMITER + self.EXT_DELIMITER.join(exts) if exts else ""
 
 
 
@@ -157,17 +180,30 @@ class TreeNode:
     
 
 
+    @property
+    def is_root(self) -> bool:
+        """ 
+        Check if this node is the root node 
+        
+        By default, TreeNodes are NEVER root nodes
+        subclasses may change this behaviour
+        """
+
+        return False
+
+
     @parent.setter
     def parent(self, new_parent: Optional[Type['TreeNode']]) -> None:
         """
         Set a new parent for this node.
 
-        Just attempts to ask the new parent to add this instance to it.
+        Throws InvalidParentError if the parent provided cannot be used as a parent
+        Throws DuplicateChildNameError if naming found conflict in the parent
         """
         
         # If the new_parent is None, just unlink
         if not new_parent:
-            return self.unlink(True)
+            return self.unlink(quiet=True)
         
         # Otherwise, attempt to add this node to the new_parent
         try:
@@ -175,7 +211,7 @@ class TreeNode:
 
         # If an exception is raised here, the node should be unaffected
         except AttributeError as e:
-            raise ValueError(f"Node '{new_parent}' cannot take children") from e
+            raise InvalidParentError(f"The provided parent node '{new_parent}' cannot take children") from e
 
 
 
@@ -189,7 +225,7 @@ class TreeNode:
 
         parts = [self]
         for node in self._gen_traverse_up():
-            parts = [node, *parts]
+            parts = (node, *parts)
         
         return parts
 
@@ -199,7 +235,17 @@ class TreeNode:
     def path(self) -> str:
         """ Return full path from root to this node """
 
-        return self.PATH_DELIMITER.join(part.name for part in self.parts)
+        return self._create_path(self.parts)
+    
+
+
+    @property
+    def root(self) -> 'TreeNode':
+        """
+        Get the root node of this tree
+        """
+
+        return self.parts[0]
 
 
 
@@ -208,20 +254,20 @@ class TreeNode:
 
         parts = [self]
         for node in self._gen_traverse_up():
-            parts = [node, *parts]
-
             if node is relative_to:
                 return parts
+            
+            parts = (node, *parts)
 
         # If not yet returned, node wasn't found
-        raise ValueError(f"Node '{relative_to}' does not exist between this node '{self}' and root")
+        raise NodeNotFoundError(f"Node '{relative_to}' does not exist between this node '{self}' and root")
 
 
 
     def rel_path(self, relative_to: Type['TreeNode']) -> str:
         """ Same as .path but relative to any node between this and root"""
 
-        return self.PATH_DELIMITER.join(part.name for part in self.rel_parts(relative_to))    
+        return self._create_path(self.rel_parts(relative_to))  
 
 
 
@@ -234,7 +280,7 @@ class TreeNode:
             if quiet:
                 return 
             
-            raise Exception("Node has no parent")
+            raise InvalidParentError("This node has no parent to be unlinked from (set quiet=True to avoid this)")
         
 
         # Request that the parent remove this node from itself
@@ -244,19 +290,40 @@ class TreeNode:
 
     #
     # Private API
-    # ---
+    # --- 
+
+
+    def _create_path(self, path_parts: Tuple['TreeNode', ...]) -> str:
+        """ 
+        Create a string path using a tuple of nodes
+        """
+
+        if len(path_parts) == 1:
+            if path_parts[0].is_root:
+                return path_parts[0].name + self.PATH_DELIMITER
+            
+            return path_parts[0].name
+
+        elif len(path_parts) > 1:
+            return self.PATH_DELIMITER.join(part.name for part in path_parts)
+        
+        # if not yet returned, len(path_parts) < 1 which is invalid
+        raise ValueError("Tuple of Nodes must have length > 0")
+
+        
+
 
     def _split_name(self, name: str) -> Tuple[str, Tuple[str, ...]]: 
         """ Split a name by basename and extensions """
 
         # seperate the filename by the extension delimiter
         # (the list created here will always have len > 0)
-        fname_parts = self.name.split(self.EXT_DELIMITER)
+        fname_parts = name.split(self.EXT_DELIMITER)
         
 
         # if only one name parts, no extensions
         if len(fname_parts) == 1:
-            return tuple(fname_parts[0], tuple())
+            return (fname_parts[0], tuple())
 
         # Otherwise, length > 1,
         # if first item is "", this must be a hidden file name (".hidden_file")
@@ -278,11 +345,23 @@ class TreeNode:
         return bool(name)
 
 
+    def _change_name(self, new_name: str) -> None:
+        """ 
+        Overriddable method to change name, allows for subclasses
+        with different ways of storing names to easily change them
+        without having to override the default setter
+        
+        Does NOT check for errors!
+        """
+
+        self._name = new_name
+
+
     def _gen_traverse_up(self) -> Generator['TreeNode', None, None]:
         """ 
         Generator that traverses up a tree to root 
         
-        First item is the PARENT of a node, NOT the node itself
+        First item is the PARENT of this node, NOT the node itself
         """
 
         current_node = self.parent
