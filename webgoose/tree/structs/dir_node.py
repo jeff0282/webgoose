@@ -150,35 +150,28 @@ class Directory(TreeNode):
         Throws NodeNotFoundError if path doesn't exist
         """
 
-        def traversal_func(starting_node:   TreeNode, 
-                           path_parts:      Tuple[str, ...]) -> Tuple[TreeNode]:
-            
-            """
-            Simple matching function for use with ``_traverse_to_path()``
-            Matches a single file, no wildcards.
-            """
+        # Split path into it's seperate names
+        is_absolute, path_parts = self._split_path(path)
 
-            current_node = starting_node
-            for name in path_parts:
+        # if path is absolute, set starting_node to root of this tree
+        current_node = self.root if is_absolute else self
 
-                # there should only be one match here (unless duplicate checking broken :/)
-                match = tuple(filter(lambda node: node.name == name, current_node.children))
+        # Iterate through the path parts, attempt to traverse according to path
+        for name in path_parts:
 
-                # if no match found, raise exception as path does not exist
-                if not match:
-                    raise NodeNotFoundError(f"The path '{path}' does not exist")
+            # try to match node by string name
+            # there should only be one match here (duplicate names should not be allowed)
+            match = tuple(filter(lambda node: node.name == name, current_node.children))
 
-                current_node = match[0]
+            # if no match found, raise exception as path does not exist
+            if not match:
+                raise NodeNotFoundError(f"The path '{path}' does not exist")
 
-            # Return found node in a tuple
-            # (_traverse_to_path() typing expects this)
-            return (current_node,)
+            # if match found, set it to current node and loop
+            current_node = match[0]
 
-        # Use helper func above to get node with provided name
-        matches = self._traverse_to_path(path, traversal_func)
-
-        # if no exceptions raised, matches should have len == 1
-        return matches[0]
+        # Return the last found node if out of loop and no exception raised
+        return current_node
 
 
 
@@ -187,77 +180,25 @@ class Directory(TreeNode):
         Implements glob for site tree
         """
 
-        def glob_traversal(starting_node:   TreeNode,
-                           path_parts:      Tuple[str, ...]) -> Tuple[TreeNode, ...]:
-            
-            """
-            le globby :)
-            """
-
-            # Get glob matches for first name in path parts
-            matches = []
-            for child in starting_node.children:
-                matches.append(child) if fnmatch.fnmatch(child.name, path_parts[0]) else None
-
-            # if not at end of path parts:
-            # > glob dirs with path_parts[1:]
-            # > remove non-directories from matches
-            if path_parts[1:]:
-                glob_dir = lambda match: glob_traversal(match, path_parts[1:])
-                matches = [glob_dir(match) for match in matches if isinstance(match, Directory)]
-
-            return matches
-
-        # Use globing helper func with traverse_to_path
-        return self._traverse_to_path(pattern, glob_traversal)
+        # TODO: _traverse_to_path(parts, func) no longer in private API
 
     
-    
 
-    def has(self, name_pattern: str) -> bool:
+    def has(self, pattern: str) -> bool:
         """ 
         Check if this node has a child node with name matching glob expression 
+
+        This method does NOT support paths, only immediate children
         """
 
         child_names = [child.name for child in self.children]
-        return any(fnmatch.filter(child_names, name_pattern))
+        return any(fnmatch.filter(child_names, pattern))
 
     
 
     #
     # Private API
     # ---
-
-    def _traverse_to_path(self, 
-                          path: str, 
-                          traversal_func: Callable[[TreeNode, Tuple[str]], Tuple[TreeNode, ...]]) -> Tuple[TreeNode, ...]:
-        """ 
-        Traverse a path and return found node, supports relative and absolute paths 
-        
-        Thrown NodeNotFoundError if path does not exist
-        """
-
-        # clean trailing slash if necessary
-        if path.endswith(self.PATH_DELIMITER):
-            path = path[:-len(self.PATH_DELIMITER)]
-
-        # split path into its pieces
-        path_parts = path.split(self.PATH_DELIMITER)
-
-        # If path is absolute, set starting point to root, else use current node
-        starting_node = self
-        if path_parts[0] == "":
-            path_parts.pop(0)
-            starting_node = self.root
-
-        # Use given function to traverse to a path
-        # providing the setup shit above :3
-        return traversal_func(starting_node, path_parts)
-
-
-
-
-
 
     def _add_node(self, node: Type[TreeNode]) -> None:
         """ 

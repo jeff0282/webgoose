@@ -298,14 +298,19 @@ class TreeNode:
         Create a string path using a tuple of nodes
         """
 
+        sep = self.PATH_DELIMITER
+
+        # Handle case where path_parts is a singleton tuple
+        # for root nodes, the path should be <node.name> + <sep>
+        # (sep.join((single_node,)) will incorrectly return <node.name>)
         if len(path_parts) == 1:
             if path_parts[0].is_root:
-                return path_parts[0].name + self.PATH_DELIMITER
+                return path_parts[0].name + sep
             
             return path_parts[0].name
 
         elif len(path_parts) > 1:
-            return self.PATH_DELIMITER.join(part.name for part in path_parts)
+            return sep.join(part.name for part in path_parts)
         
         # if not yet returned, len(path_parts) < 1 which is invalid
         raise ValueError("Tuple of Nodes must have length > 0")
@@ -335,6 +340,37 @@ class TreeNode:
         # If not hidden file, first name_part must be the basename
         # exrs are 2nd and subsequent fname parts
         return (fname_parts[0], tuple(fname_parts[1:]))
+
+
+
+    def _split_path(self, path: str) -> Tuple[str, ...]:
+        """ 
+        Returns a tuple containing a boolean of whether the path is absolute
+        and a nested Tuple of strings derived from the path
+
+        For example:
+
+        "/posts/categories/index.html"  > (True, ("posts", "categories", "index"))
+        "posts/categories/index.html"   > (False, ("posts", "categories", "index"))
+
+        Trailing slashes (e.g. "/posts/categories/) are cleaned from the path
+        """
+
+        # Set some initial values
+        is_absolute = False
+        sep = self.PATH_DELIMITER
+
+        # Clean the path (trim start and end slashes if appli.) 
+        # & check if path absolute or relative
+        if path.startswith(sep):
+            path = path[len(sep):]
+            is_absolute = True
+
+        if path.endswith(sep):
+            path = path[:-len(sep)]
+
+        # split cleaned path and return
+        return (is_absolute, path.split(sep))
 
 
 
