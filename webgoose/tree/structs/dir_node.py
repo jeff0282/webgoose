@@ -30,6 +30,8 @@ class Directory(TreeNode):
                  children:  Iterable[Type[TreeNode]]    = tuple()) -> None:
         """
         Create a Directory Node
+
+        TODO: better docstring req'd
         """
 
         # Initialise private vars with default values
@@ -229,22 +231,6 @@ class Directory(TreeNode):
         return helper_func(starting_node, path_parts)
         
 
-
-                
-
-
-
-
-                    
-
-
-
-
-
-
-
-
-    
 
     def has(self, pattern: str) -> bool:
         """ 
