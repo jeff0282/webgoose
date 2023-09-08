@@ -1,0 +1,33 @@
+translate:
+	DEFAULT:
+		handlers:		
+			webgoose.tree.trans.ExpandableHandler:
+				catch: ["[*].md"]
+				
+	
+			webgoose.tree.trans.IndexHandler:
+				catch: [""]
+
+			webgoose.tree.trans.StdHandler:
+				index: 9999
+				catch: ["*.md"]
+			
+			
+				
+
+	"/blog/:
+		inherit: True
+		recursive: True
+		handlers:
+			webgoose.tree.simple_blog.PostHandler:
+				catch: [*.post]
+				params:
+					tag_dir: /blog/tags
+					cat_dir: /blog/cat
+
+				returns: [blog_obj]
+
+				
+
+			
+		
