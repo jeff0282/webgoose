@@ -107,14 +107,14 @@ class GenericDirectory(BaseNode):
         matches = []
         while(stack):
             cur_node = stack.pop()
-            cur_part, *next_parts = parts
+            cur_part, *parts = parts
 
             # if not last part of path, get matching dirs
-            if next_parts:
+            if parts:
 
                 # perform recursive glob if needed
                 if cur_part == "**":
-                    matches.extend(self.map(lambda node: node.get(next_parts)))
+                    matches.extend(self.map(lambda node: node.get(parts)))
                     continue
 
 
