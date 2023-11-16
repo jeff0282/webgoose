@@ -1,33 +1,36 @@
 
 import  os
 
+from    typing      import      Any
 from    typing      import      Optional
 from    typing      import      Type
 
-from    dataclasses     import      dataclass
 from    pathvalidate    import      validate_filepath
 from    pathvalidate    import      ValidationError
 
-from    webgoose.exceptions     import      _BaseWebgooseException
+from    webgoose.exceptions     import      BaseWebgooseException
 
 
 
-class InvalidPathError(_BaseWebgooseException):
+class InvalidPathError(BaseWebgooseException):
     pass
 
 
-@dataclass(frozen=True, kw_only=True)
 class BaseFile:
     """
     The base implementation of a file object; not for direct use
     """
 
-    slug: str
-    data: Type[FileData]
-    parent: Optional[Type['BaseFile']] = None
+    _slug: str
 
-    def __post_init__(self) -> None:
+    def __init__(self, 
+                 slug: str,
+                 *,
+                 parent: Optional[Type['BaseFile']] = None) -> None:
+    
         self._validate_slug(self.slug)
+        self._slug = os.path.normpath(slug)
+        self._parent = parent
 
 
     def __repr__(self) -> str:
@@ -37,6 +40,24 @@ class BaseFile:
     def __str__(self) -> str:
         return self.path
     
+
+    def __eq__(self, cmp: Any) -> bool:
+        return cmp is self
+    
+
+    def __hash__(self) -> int:
+        return hash(self.slug)
+    
+
+    @property
+    def slug(self) -> str:
+        return self._slug
+    
+
+    @property
+    def parent(self) -> Optional[Type['BaseFile']]:
+        return self._parent
+
 
     @property
     def filename(self) -> str:

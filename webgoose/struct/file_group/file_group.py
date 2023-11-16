@@ -1,70 +1,73 @@
 
 import  os
 
-from    typing      import      Optional
+from    typing      import      Any
 from    typing      import      Type
+from    typing      import      Iterable
+from    typing      import      Iterator
+from    typing      import      Optional
 
-from    pathvalidate    import      validate_filepath
-from    pathvalidate    import      ValidationError
+from    wcmatch     import      glob
 
-from    webgoose.exceptions             import      _BaseWebgooseException
-from    webgoose.struct                 import      Component
-from    webgoose.struct.file_group      import      _RenderSubgroup
-from    webgoose.struct.file_group      import      _StaticSubgroup
-
-
-
-class InvalidPathError(_BaseWebgooseException):
-    pass
+from    webgoose.struct     import      BaseFile
 
 
 class FileGroup:
 
-    _parent_component: Type[Component]
-    _renderable: Type[_RenderSubgroup]
-    _static: Type[_StaticSubgroup]
+    _files: set[Type[BaseFile]]
 
-
-    def __init__(self, parent_component: Optional[Type[Component]] = None) -> None:
+    def __init__(self, 
+                 initlist: Optional[Iterable[BaseFile]] = None) -> None:
         
-        self._parent_component = parent_component
-        self._renderable = _RenderSubgroup(parent_group=self)
-        self._static = _StaticSubgroup(parent_group=self)
+        self._files = set()
+
+        if initlist:
+            for file in initlist:
+                self.add(file)k
 
     
-    @property
-    def static(self) -> Type[_StaticSubgroup]:
-        return self._static
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({str(self._files)})"
+
+
+    def __len__(self) -> int:
+        return len(self._files)
+
+
+    def __bool__(self) -> bool:
+        return bool(self._files)
+
+
+    def __iter__(self) -> Iterator[Type[BaseFile]]:
+        for file in self._files:
+            yield file
+
+
+    def __contains__(self, cmp: Any) -> bool:
+        return cmp in self._files
+
+
+    def add(self, file_obj: Type[BaseFile]) -> None:
+        if file_obj in self._files:
+            raise FileExistsError(f"{self.__class__.__name__} already has a file at path '{file_obj.slug}'")
+        
+        self._files.add(file_obj)
     
 
-    @property
-    def renderable(self) -> Type[_RenderSubgroup]:
-        return self._renderable
+    def get(self, slug: str, _default: Optional[Any] = None) -> Type[BaseFile] | Any | None:
+        slug = os.path.normpath(slug)
 
+        for file in self._files:
+            if file.slug == slug:
+                return file
 
+        return _default
+            
 
-    def add(self, renderable: Type[Renderable], rel_build_path: str) -> None:
-        """
-        Add a Renderable object to this file grouping
+    def glob(self, pattern: str) -> Type['FileGroup']:
+        matches = self.__class__()
+        pattern = os.path.normpath(pattern)
 
-        Takes a Renderable object and a relative string path as build location
-
-        Throws InvalidPathError if path provided is malformed or absolute
-        """
-
-        self._validate_build_path(rel_build_path)
-        self.renderable.append(renderable)
-
-
-
-    def add_static(self, static_file: os.Pathlike | Type[StaticFile], rel_build_path: str) -> None:
-        """
-        Add a static file to this file grouping
-
-        Takes an os.PathLike object and a relative string path as build location
-
-        Throws InvalidPathError if path provided is malformed or absolute
-        """
-
-        self._validate_rel_path(rel_build_path)
-        self.static.append(static_file)
+        for file in self._files:
+            if glob.globmatch(file.slug, pattern):
+                matches.add(file)
