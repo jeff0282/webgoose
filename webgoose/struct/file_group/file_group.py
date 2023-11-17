@@ -16,14 +16,8 @@ class FileGroup:
 
     _files: set[Type[BaseFile]]
 
-    def __init__(self, 
-                 initlist: Optional[Iterable[BaseFile]] = None) -> None:
-        
-        self._files = set()
-
-        if initlist:
-            for file in initlist:
-                self.add(file)k
+    def __init__(self, initlist: Iterable[BaseFile]) -> None:
+        self._files = set(initlist)
 
     
     def __repr__(self) -> str:

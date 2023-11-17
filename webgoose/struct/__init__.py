@@ -1,3 +1,5 @@
+# webgoose.struct
+
 # File Structures
 from    .file.base_file             import      BaseFile
 from    .component.component        import      Component
