@@ -16,6 +16,10 @@ class InvalidPathError(BaseWebgooseException):
     pass
 
 
+class NotAnOrphanError(ValueError):
+    pass
+
+
 class BaseFile:
     """
     The base implementation of a file object; not for direct use
@@ -28,9 +32,7 @@ class BaseFile:
                  *,
                  parent: Optional[Type['BaseFile']] = None) -> None:
     
-        self._validate_slug(self.slug)
-        self._slug = os.path.normpath(slug)
-        self._parent = parent
+        self._attach_to_parent(slug, parent)
 
 
     def __repr__(self) -> str:
@@ -51,6 +53,9 @@ class BaseFile:
 
     @property
     def slug(self) -> str:
+        # SLUG IS RELIED UPON FOR HASHING
+        #
+        # SLUG MUST NOT CHANGE ONCE COMPONENT IS ATTACHED
         return self._slug
     
 
@@ -121,6 +126,7 @@ class BaseFile:
         if not self.ext:
             return tuple()
 
+        # chop off first seperator, then split by sep'
         ext = self.ext[1:]
         return tuple(ext.split(os.extsep))
 
@@ -146,24 +152,48 @@ class BaseFile:
         """
         Returns the full string path of a file object
         """
-        os.sep.join(self.parts)
+
+        # if a slug is the empty string, it is ignored for the 
+        # purposes of path building
+        os.sep.join(parts.slug for parts in self.parts if parts.slug)
 
 
-    @staticmethod
-    def _validate_slug(path: str):
+    def _validate_slug(self, slug: str):
         """
-        Validate a slug, checking that it's well-formed and is not absolute
-
-        Platform independent (hopefully :3)
+        Validate a file path slug
         """
 
         # See if path is well formed
         try:
-            validate_filepath(path)
+            validate_filepath(slug)
         
         except ValidationError as e:
-            raise InvalidPathError(f"Invalid Path: '{path}' is not a valid path")
+            raise InvalidPathError(f"Invalid Path: '{slug}' is not a valid path")
         
         # if path well formed, check if relative
-        if os.path.isabs(path):
-            raise InvalidPathError(f"Invalid Path: '{path}' path given must be relative, not absolute")
+        if os.path.isabs(slug):
+            raise InvalidPathError(f"Invalid Path: '{slug}' path given must be relative, not absolute")
+        
+
+
+    def _attach_to_parent(self, slug: str, parent: Optional[Type['BaseFile']]) -> None:
+        """
+        Validate and establish child-to-parent connection
+
+        Raises:
+            - InvalidPathError if slug is not valid
+            - NotAnOrphanError if this file already has a parent
+        """
+
+        # Check if slug is valid
+        self._validate_slug(slug)
+
+        # check if file is an orphan
+        # SLUG CANNOT CHANGE ONCE ATTACHED TO A PARENT (SET HASHING ISSUES)
+        # NOT AN ISSUE IF SELF.PARENT = NONE
+        if self.parent:
+            raise NotAnOrphanError(f"{self} is already attached to '{self.parent}'")
+        
+        # If no errors, set the stuff
+        self._slug = os.path.normpath(slug)
+        self._parent = parent
