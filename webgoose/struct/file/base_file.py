@@ -31,6 +31,9 @@ class BaseFile:
                  slug: str,
                  *,
                  parent: Optional[Type['BaseFile']] = None) -> None:
+        """
+        
+        """
     
         self._attach_to_parent(slug, parent)
 
@@ -53,9 +56,6 @@ class BaseFile:
 
     @property
     def slug(self) -> str:
-        # SLUG IS RELIED UPON FOR HASHING
-        #
-        # SLUG MUST NOT CHANGE ONCE COMPONENT IS ATTACHED
         return self._slug
     
 
@@ -158,6 +158,14 @@ class BaseFile:
         os.sep.join(parts.slug for parts in self.parts if parts.slug)
 
 
+    @property
+    def is_orphan(self) -> bool:
+        """
+        Whether or not this file is an orphan
+        """
+        return bool(self.parent)
+
+
     def _validate_slug(self, slug: str):
         """
         Validate a file path slug
@@ -179,20 +187,14 @@ class BaseFile:
     def _attach_to_parent(self, slug: str, parent: Optional[Type['BaseFile']]) -> None:
         """
         Validate and establish child-to-parent connection
-
-        Raises:
-            - InvalidPathError if slug is not valid
-            - NotAnOrphanError if this file already has a parent
         """
+        # check if file is an orphan
+        # FILES MUST NOT BE CHANGED ONCE ATTACHED TO A PARENT (SET HASHING ISSUES)
+        if not self.is_orphan:
+            raise NotAnOrphanError(f"{self} is already attached to '{self.parent}'")
 
         # Check if slug is valid
         self._validate_slug(slug)
-
-        # check if file is an orphan
-        # SLUG CANNOT CHANGE ONCE ATTACHED TO A PARENT (SET HASHING ISSUES)
-        # NOT AN ISSUE IF SELF.PARENT = NONE
-        if self.parent:
-            raise NotAnOrphanError(f"{self} is already attached to '{self.parent}'")
         
         # If no errors, set the stuff
         self._slug = os.path.normpath(slug)

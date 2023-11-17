@@ -3,7 +3,6 @@ import  re
 import  os
 
 from    typing      import      Any
-from    typing      import      Iterable
 from    typing      import      Optional
 from    typing      import      Type
 
@@ -28,6 +27,9 @@ class Component(BaseFile):
     _name: str
     _files: set[Type[File]]
     _subcomponents: set[Type['Component']]
+
+    file_group_cls: Type[FileGroup] = FileGroup
+    render_group_cls: Type[RenderGroup] = RenderGroup
 
     def __init__(self, name: str) -> None:
         """
@@ -67,9 +69,6 @@ class Component(BaseFile):
         """
         This Component's name.
         """
-        # NAME IS RELIED UPON FOR HASHING
-        #
-        # NAME MUST NOT CHANGE ONCE COMPONENT IS ATTACHED
         return self.name
 
 
@@ -78,7 +77,7 @@ class Component(BaseFile):
         """
         This Component's files as a FileGroup
         """
-        return FileGroup(self.files)
+        return self.file_grp_cls(self.files)
 
 
     @property
@@ -86,7 +85,7 @@ class Component(BaseFile):
         """
         This component's renderable files as a RenderGroup
         """
-        return RenderGroup((file for file in self.files if isinstance(file, Renderable)))
+        return self.render_group_cls((file for file in self.files if isinstance(file, Renderable)))
     
 
     @property
@@ -94,7 +93,7 @@ class Component(BaseFile):
         """
         This component's static files as a FileGroup
         """
-        return FileGroup((file for file in self.files if isinstance(file, Renderable)))
+        return self.file_group_cls((file for file in self.files if isinstance(file, Renderable)))
 
 
     @property
@@ -121,7 +120,7 @@ class Component(BaseFile):
         return self.files.get(slug, _default)
 
 
-    def attach_component(self, slug: str, subcomponent: Type['Component']) -> None:
+    def attach_component(self, slug: str, subcomponent: Type['Component'], /) -> None:
         """
         Attach a subcomponent to this component
         """
@@ -133,6 +132,7 @@ class Component(BaseFile):
         # attempt child-to-parent connection
         subcomponent._attach_to_parent(slug, self)
 
+        # if no issues, add as child of this component
         self._subcomponents.add(subcomponent)
         
 
@@ -147,7 +147,7 @@ class Component(BaseFile):
 
         # if file path given, assume static file, otherwise assume renderable file
         if isinstance(file_data_obj, os.PathLike) or type(file_data_obj) == str:
-            file_obj = File(slug, Path(file_data_obj))
+            file_obj = StaticFile(slug, Path(file_data_obj))
 
         else:
             file_obj = Renderable(slug, file_data_obj)
