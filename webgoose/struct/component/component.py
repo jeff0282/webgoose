@@ -134,22 +134,6 @@ class Component(BaseFile):
         subcomponent._attach_to_parent(slug, self)
 
         self._subcomponents.add(subcomponent)
-
-
-    def _attach_to_parent(self, slug: str, parent: Type['Component']) -> None:
-        """
-        Establish child-to-parent connect when attaching a subcomponent
-        to a parent component
-
-        Raises:
-            - MalformedComponentNameError if slug is not valid
-            - AlreadyAttachedError if this component is already attached to another parent
-            (no such methods exist for cleanly detaching two components)
-        """
-
-        self._validate_slug(slug)
-        if self.parent:
-            raise AlreadyAttachedError(f"{self} is already attached to '{self.parent}'")
         
 
     def _create_file_from_data(self, 
