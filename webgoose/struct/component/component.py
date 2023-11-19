@@ -19,29 +19,33 @@ class MalformedComponentNameError(ValueError):
     pass
 
 
+class NotAnOrphanError(ValueError):
+    pass
+
+
 class Component(BaseFile):
     """
     
     """
 
     _name: str
+    _attach_point: dict[str, Type['Component']] | None
     _files: set[Type[File]]
     _subcomponents: set[Type['Component']]
-
-    file_group_cls: Type[FileGroup] = FileGroup
-    render_group_cls: Type[RenderGroup] = RenderGroup
 
     def __init__(self, name: str) -> None:
         """
         
         """
 
+        # validate component name
         self._validate_component_name(name)
+        
+        # set instance vars
         self._name = name
+        self._attach_point = None
         self._files = set()
         self._subcomponents = set()
-
-        super().__init__("")
 
 
     def __bool__(self) -> bool:
@@ -56,7 +60,7 @@ class Component(BaseFile):
         return cmp in self.files
 
 
-    def __getattr__(self, key: str) -> Type['BaseComponent']:
+    def __getattr__(self, key: str) -> Type['Component']:
         match = self.subcomponents.get_by_name(key, None)
         if match:
             return match
@@ -70,6 +74,58 @@ class Component(BaseFile):
         This Component's name.
         """
         return self.name
+    
+
+    @property
+    def attach_point(self) -> dict[str, Type['Component']] | None:
+        """
+        This Component's attach point
+        """
+        return self._attach_point
+    
+
+    @attach_point.setter
+    def attach_point(self, 
+                     attach_pnt_tuple: tuple[str, Type['Component']]) -> None:
+        """
+        
+        """
+
+        # Attempt to extract necessary info, string slug and parent component
+        try:
+            slug, parent = attach_pnt_tuple
+        
+        except ValueError as e:
+            raise ValueError(f"Attach Point must be an interable in form '(str slug, parent component)'") from e
+
+        # check if node is already attached
+        if not self.attach_point:
+            raise NotAnOrphanError(f"Cannot set attachment point, '{self}' is already attached to '{self.parent}'")
+        
+        # validate the string slug
+        self._validate_slug(slug)
+
+        # if all good, set up child-to-parent connection
+        slug = os.path.normpath(slug)
+        self._attach_point = dict(slug=slug, parent=parent)
+    
+
+    @property
+    def parent(self) -> Type['Component'] | None:
+        """
+        This Component's parent
+        """
+        if self.attach_point:
+            return self.attach_point["parent"]
+        
+
+    @property
+    def slug(self) -> str | None:
+        """
+        This Component's slug
+        """
+        if self.attach_point:
+            return self.attach_point["slug"]
 
 
     @property
@@ -77,7 +133,7 @@ class Component(BaseFile):
         """
         This Component's files as a FileGroup
         """
-        return self.file_grp_cls(self.files)
+        return FileGroup(self.files)
 
 
     @property
@@ -85,7 +141,7 @@ class Component(BaseFile):
         """
         This component's renderable files as a RenderGroup
         """
-        return self.render_group_cls((file for file in self.files if isinstance(file, Renderable)))
+        return RenderGroup((file for file in self.files if isinstance(file, Renderable)))
     
 
     @property
@@ -93,7 +149,7 @@ class Component(BaseFile):
         """
         This component's static files as a FileGroup
         """
-        return self.file_group_cls((file for file in self.files if isinstance(file, Renderable)))
+        return FileGroup((file for file in self.files if isinstance(file, Renderable)))
 
 
     @property
@@ -107,6 +163,9 @@ class Component(BaseFile):
     def add(self, 
             slug: str, 
             file_data_obj: Type[FileData]| os.PathLike | str, /) -> None:
+        """
+        
+        """
 
         file_obj = self._create_file_from_data(slug, file_data_obj)
         super().add(file_obj)
@@ -165,15 +224,3 @@ class Component(BaseFile):
         if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$"):
             raise MalformedComponentNameError("""Invalid Component Name. Must only contain letters, 
                                               numbers & underscores, and be a valid Python attribute name""")
-
-
-    def _validate_slug(self, slug: str) -> None:
-        """
-        Validate a file path slug
-        """
-
-        # Empty strings are valid slugs for components
-        if slug == "":
-            return None
-
-        return super()._validate_slug(slug)

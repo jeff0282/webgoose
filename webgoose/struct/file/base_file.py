@@ -1,4 +1,5 @@
 
+import  abc
 import  os
 
 from    typing      import      Any
@@ -16,27 +17,10 @@ class InvalidPathError(BaseWebgooseException):
     pass
 
 
-class NotAnOrphanError(ValueError):
-    pass
-
-
-class BaseFile:
+class BaseFile(metaclass=abc.ABCMeta):
     """
     The base implementation of a file object; not for direct use
     """
-
-    _slug: str
-
-    def __init__(self, 
-                 slug: str,
-                 *,
-                 parent: Optional[Type['BaseFile']] = None) -> None:
-        """
-        
-        """
-    
-        self._attach_to_parent(slug, parent)
-
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.slug})"
@@ -50,18 +34,21 @@ class BaseFile:
         return cmp is self
     
 
+    @abc.abstractmethod
     def __hash__(self) -> int:
-        return hash(self.slug)
+        raise NotImplemented()        
     
 
     @property
+    @abc.abstractmethod
     def slug(self) -> str:
-        return self._slug
+        raise NotImplemented()
     
 
     @property
-    def parent(self) -> Optional[Type['BaseFile']]:
-        return self._parent
+    @abc.abstractmethod
+    def parent(self) -> Type['BaseFile'] | None:
+        raise NotImplemented
 
 
     @property
@@ -158,13 +145,6 @@ class BaseFile:
         os.sep.join(parts.slug for parts in self.parts if parts.slug)
 
 
-    @property
-    def is_orphan(self) -> bool:
-        """
-        Whether or not this file is an orphan
-        """
-        return bool(self.parent)
-
 
     def _validate_slug(self, slug: str):
         """
@@ -181,21 +161,3 @@ class BaseFile:
         # if path well formed, check if relative
         if os.path.isabs(slug):
             raise InvalidPathError(f"Invalid Path: '{slug}' path given must be relative, not absolute")
-        
-
-
-    def _attach_to_parent(self, slug: str, parent: Optional[Type['BaseFile']]) -> None:
-        """
-        Validate and establish child-to-parent connection
-        """
-        # check if file is an orphan
-        # FILES MUST NOT BE CHANGED ONCE ATTACHED TO A PARENT (SET HASHING ISSUES)
-        if not self.is_orphan:
-            raise NotAnOrphanError(f"{self} is already attached to '{self.parent}'")
-
-        # Check if slug is valid
-        self._validate_slug(slug)
-        
-        # If no errors, set the stuff
-        self._slug = os.path.normpath(slug)
-        self._parent = parent
