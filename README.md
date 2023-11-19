@@ -1,6 +1,11 @@
-# Webgoose -  A Tree-Centric Static Site Generator
+# Webgoose - A Static-Site Generating Micro-Framework
 
-I've restarted this project atleast half-a-dozen times already... I promise I'll actually make it eventually lol!
+**[Still very much in development, I swear this project never gets anywhere..]**
 
-### TODO:
-- make it do thing :)
+In its 12th(?) round of 'back to the drawing board', Webgoose has now become a micro-framework designed around compartmentalisation.
+
+Primary to the objectives of Webgoose are its Components and their Filegroups, which allow for easy grouping of both static and renderable files, attached together in a tree hierarchy.
+
+The current iteration of Webgoose is inspired by a similar framework ['Lightweight'](https://github.com/mdrachuk/lightweight), and shares a similar API.
+
+More information and documentation will be made available as the project progresses. This iteration of Webgoose seems to be going better than usual...!
