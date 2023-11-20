@@ -3,24 +3,49 @@ import  abc
 import  os
 
 from    typing      import      Any
-from    typing      import      Optional
 from    typing      import      Type
 
-from    pathvalidate    import      validate_filepath
 from    pathvalidate    import      ValidationError
+from    pathvalidate    import      validate_filepath
 
-from    webgoose.exceptions     import      BaseWebgooseException
-
-
-
-class InvalidPathError(BaseWebgooseException):
-    pass
+from    webgoose.struct     import      InvalidPathError
 
 
-class BaseFile(metaclass=abc.ABCMeta):
+class AbstractFileLike(metaclass=abc.ABCMeta):
     """
     The base implementation of a file object; not for direct use
     """
+
+    # ---
+    # SUBCLASSES MUST IMPLEMENT THE BELOW 
+    #
+
+    @abc.abstractmethod
+    def __hash__(self) -> int:
+        """
+        """
+        raise NotImplemented()
+    
+
+    @property
+    @abc.abstractmethod
+    def slug(self) -> str:
+        """
+        """
+        raise NotImplemented()
+    
+
+    @property
+    @abc.abstractmethod
+    def parent(self) -> Type['AbstractFileLike'] | None:
+        """
+        """
+        raise NotImplemented()
+    
+
+    # ---
+    # FILE-LIKE PROPERTIES AND OPERATIONS
+    #
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.slug})"
@@ -32,23 +57,6 @@ class BaseFile(metaclass=abc.ABCMeta):
 
     def __eq__(self, cmp: Any) -> bool:
         return cmp is self
-    
-
-    @abc.abstractmethod
-    def __hash__(self) -> int:
-        raise NotImplemented()        
-    
-
-    @property
-    @abc.abstractmethod
-    def slug(self) -> str:
-        raise NotImplemented()
-    
-
-    @property
-    @abc.abstractmethod
-    def parent(self) -> Type['BaseFile'] | None:
-        raise NotImplemented
 
 
     @property
@@ -119,7 +127,7 @@ class BaseFile(metaclass=abc.ABCMeta):
 
 
     @property
-    def parts(self) -> tuple[Type['BaseFile']]:
+    def parts(self) -> tuple[Type['AbstractFileLike']]:
         """
         Returns a tuple of each parent node from this node,
         in order root-to-node
@@ -140,24 +148,30 @@ class BaseFile(metaclass=abc.ABCMeta):
         Returns the full string path of a file object
         """
 
-        # if a slug is the empty string, it is ignored for the 
-        # purposes of path building
-        os.sep.join(parts.slug for parts in self.parts if parts.slug)
+        # join together segments by their paths
+        path = os.sep.join(parts.slug for parts in self.parts if parts.slug)
+        
+        # some slugs may have os.curdir as their
+        return os.path.normpath(path)
 
 
-
-    def _validate_slug(self, slug: str):
+    def validate_slug(self, slug: str):
         """
         Validate a file path slug
         """
+
+        # check for os.pardir segments in slug
+        if any(part for part in slug.split(os.sep) if part == os.pardir):
+            raise InvalidPathError(f"Invalid Path: Paths must not contain parent dir references '{os.pardir}'")
 
         # See if path is well formed
         try:
             validate_filepath(slug)
         
         except ValidationError as e:
-            raise InvalidPathError(f"Invalid Path: '{slug}' is not a valid path")
+            raise InvalidPathError(f"Invalid Path: '{slug}' is not a valid path") from e
         
         # if path well formed, check if relative
         if os.path.isabs(slug):
             raise InvalidPathError(f"Invalid Path: '{slug}' path given must be relative, not absolute")
+        

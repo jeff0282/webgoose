@@ -6,31 +6,19 @@ from    typing      import      Any
 from    typing      import      Optional
 from    typing      import      Type
 
-from    webgoose.struct         import      BaseFile
+from    webgoose.struct         import      AbstractFileLike
 from    webgoose.struct         import      FileGroup
+from    webgoose.struct         import      NotAnOrphanError
 
 
-
-class ComponentExistsError(FileExistsError):
-    pass
-
-
-class MalformedComponentNameError(ValueError):
-    pass
-
-
-class NotAnOrphanError(ValueError):
-    pass
-
-
-class Component(BaseFile):
+class Component(AbstractFileLike):
     """
     
     """
 
     _name: str
     _attach_point: dict[str, Type['Component']] | None
-    _files: set[Type[File]]
+    _files: set[Type[AbstractFileLike]]
     _subcomponents: set[Type['Component']]
 
     def __init__(self, name: str) -> None:
@@ -103,7 +91,7 @@ class Component(BaseFile):
             raise NotAnOrphanError(f"Cannot set attachment point, '{self}' is already attached to '{self.parent}'")
         
         # validate the string slug
-        self._validate_slug(slug)
+        self.validate_slug(slug)
 
         # if all good, set up child-to-parent connection
         slug = os.path.normpath(slug)

@@ -1,9 +1,28 @@
 # webgoose.struct
 
+# ---
+# Exceptions
+class InvalidPathError(ValueError):
+    pass
+
+class ComponentExistsError(FileExistsError):
+    pass
+
+class MalformedComponentNameError(ValueError):
+    pass
+
+class NotAnOrphanError(ValueError):
+    pass
+
+# ---
 # File Structures
-from    .file.base_file             import      BaseFile
+from    .file.abs_file_like         import      AbstractFileLike
+
+# ---
+# Components
 from    .component.component        import      Component
 
-
-# Component File Group
+# ---
+# File Groups
 from    .file_group     import      FileGroup
+
