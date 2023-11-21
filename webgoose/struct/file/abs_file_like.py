@@ -24,7 +24,7 @@ class AbstractFileLike(metaclass=abc.ABCMeta):
     def __hash__(self) -> int:
         """
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
 
     @property
@@ -32,7 +32,7 @@ class AbstractFileLike(metaclass=abc.ABCMeta):
     def slug(self) -> str:
         """
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
 
     @property
@@ -40,7 +40,7 @@ class AbstractFileLike(metaclass=abc.ABCMeta):
     def parent(self) -> Type['AbstractFileLike'] | None:
         """
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
 
     # ---

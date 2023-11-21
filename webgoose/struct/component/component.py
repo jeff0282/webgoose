@@ -74,7 +74,8 @@ class Component(AbstractFileLike):
 
     @attach_point.setter
     def attach_point(self, 
-                     attach_pnt_tuple: tuple[str, Type['Component']]) -> None:
+                     attach_pnt_tuple: tuple[str, Type['Component']]
+                     ) -> None:
         """
         
         """
@@ -87,7 +88,7 @@ class Component(AbstractFileLike):
             raise ValueError(f"Attach Point must be an interable in form '(str slug, parent component)'") from e
 
         # check if node is already attached
-        if not self.attach_point:
+        if self.attach_point:
             raise NotAnOrphanError(f"Cannot set attachment point, '{self}' is already attached to '{self.parent}'")
         
         # validate the string slug
@@ -105,6 +106,7 @@ class Component(AbstractFileLike):
         """
         if self.attach_point:
             return self.attach_point["parent"]
+        return None
         
 
     @property
@@ -114,6 +116,7 @@ class Component(AbstractFileLike):
         """
         if self.attach_point:
             return self.attach_point["slug"]
+        return None
 
 
     @property

@@ -22,7 +22,7 @@ class AbstractBaseFile(AbstractFileLike):
     def data(self) -> Type[FileData]:
         """
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
 
     # ---
