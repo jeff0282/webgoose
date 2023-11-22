@@ -16,13 +16,13 @@ class NotAnOrphanError(ValueError):
 
 # ---
 # File Structures
-from    .file.abs_file_like         import      AbstractFileLike
+from    .file.file_like         import      FileLike
 
 # ---
 # Components
-from    .component.component        import      Component
+from    .component              import      Component
 
 # ---
 # File Groups
-from    .file_group     import      FileGroup
+from    .file_group             import      FileGroup
 

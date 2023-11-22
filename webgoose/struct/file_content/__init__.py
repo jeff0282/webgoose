@@ -25,6 +25,9 @@ from    pathlib     import      Path
 class BaseContent(metaclass=abc.ABCMeta):
     """
     Abstract Base Class for File Contents
+
+    Defines absolutely nothing, and only exists to
+    give file content classes a common parent for typing
     """
     pass
 
@@ -33,8 +36,8 @@ class StaticContent(BaseContent, metaclass=abc.ABCMeta):
     """
     Abstract Class for Static Files
 
-    Defines a 'source' property that contains a Path object
-    pointing to the source file
+    Mandates the `source` property, which should be a Path object
+    linking back to the source file
     """
 
     def __repr__(self) -> str:
@@ -72,8 +75,8 @@ class DataContent(RenderableContent, metaclass=abc.ABCMeta):
     """
     Abstract Class for Data Files (xml, json, etc)
 
-    Adds nothing on-top of RenderableContent; purely exists
-    for typing purposes
+    Defines nothing more than what RenderableContent does,
+    and exists only for typing purposes
     """
     pass
 

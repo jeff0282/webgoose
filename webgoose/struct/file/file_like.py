@@ -9,43 +9,20 @@ from    pathvalidate    import      ValidationError
 from    pathvalidate    import      validate_filepath
 
 from    webgoose.struct     import      InvalidPathError
+from    webgoose.struct     import      NotAnOrphanError
 
 
-class AbstractFileLike(metaclass=abc.ABCMeta):
+class FileLike():
     """
-    The base implementation of a file object; not for direct use
+    
     """
 
-    # ---
-    # SUBCLASSES MUST IMPLEMENT THE BELOW 
-    #
+    def __init__(self) -> None:
+        """
+        
+        """
+        self._attach_point = None
 
-    @abc.abstractmethod
-    def __hash__(self) -> int:
-        """
-        """
-        raise NotImplementedError()
-    
-
-    @property
-    @abc.abstractmethod
-    def slug(self) -> str:
-        """
-        """
-        raise NotImplementedError()
-    
-
-    @property
-    @abc.abstractmethod
-    def parent(self) -> Type['AbstractFileLike'] | None:
-        """
-        """
-        raise NotImplementedError()
-    
-
-    # ---
-    # FILE-LIKE PROPERTIES AND OPERATIONS
-    #
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.slug})"
@@ -57,6 +34,55 @@ class AbstractFileLike(metaclass=abc.ABCMeta):
 
     def __eq__(self, cmp: Any) -> bool:
         return cmp is self
+    
+
+    def __hash__(self) -> int:
+        return hash(self.slug)
+
+
+    @property
+    def slug(self) -> str | None:
+        """
+
+        """
+        if self.attach_point:
+            return self.attach_point["slug"]
+        return None
+    
+
+    @property
+    def attach_point(self) -> tuple[str, Type['FileLike']]:
+        """
+
+        """
+        raise NotImplementedError()
+    
+
+    @attach_point.setter
+    def attach_point(self, 
+                     attach_pnt_tuple: tuple[str, Type['FileLike']]
+                     ) -> None:
+        """
+        
+        """
+
+        # Attempt to extract necessary info, string slug and parent component
+        try:
+            slug, parent = attach_pnt_tuple
+        
+        except ValueError as e:
+            raise ValueError(f"Attach Point must be an interable in form '(str slug, parent component)'") from e
+
+        # check if node is already attached
+        if self.attach_point:
+            raise NotAnOrphanError(f"Cannot set attachment point, '{self}' is already attached to '{self.parent}'")
+        
+        # validate the string slug
+        self.validate_slug(slug)
+
+        # if all good, set up child-to-parent connection
+        slug = os.path.normpath(slug)
+        self._attach_point = dict(slug=slug, parent=parent)
 
 
     @property
@@ -127,7 +153,7 @@ class AbstractFileLike(metaclass=abc.ABCMeta):
 
 
     @property
-    def parts(self) -> tuple[Type['AbstractFileLike']]:
+    def parts(self) -> tuple[Type['FileLike']]:
         """
         Returns a tuple of each parent node from this node,
         in order root-to-node
