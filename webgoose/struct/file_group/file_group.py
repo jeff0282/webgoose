@@ -39,13 +39,6 @@ class FileGroup:
 
     def __contains__(self, cmp: Any) -> bool:
         return cmp in self._files
-
-
-    def add(self, file_obj: Type[BaseFile]) -> None:
-        if file_obj in self._files:
-            raise FileExistsError(f"{self.__class__.__name__} already has a file at path '{file_obj.slug}'")
-        
-        self._files.add(file_obj)
     
 
     def get(self, slug: str, _default: Optional[Any] = None) -> Type[BaseFile] | Any | None:

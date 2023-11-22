@@ -1,9 +1,13 @@
-# webgoose.struct
+"""
+webgoose.struct
 
-# File Structures
-from    .file.base_file             import      BaseFile
-from    .component.component        import      Component
+Parent module for all the structures that make up Webgoose
 
+Submodules:
+- File:         All file object representations
+- File Group:   All file grouping classes
+"""
 
-# Component File Group
-from    .file_group     import      FileGroup
+# > Components
+from    .component      import      Component
+

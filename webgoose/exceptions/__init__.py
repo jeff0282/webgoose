@@ -1,6 +1,0 @@
-
-
-class BaseWebgooseException(Exception):
-    pass
-
-
