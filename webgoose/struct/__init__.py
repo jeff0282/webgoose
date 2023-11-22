@@ -1,28 +1,13 @@
-# webgoose.struct
+"""
+webgoose.struct
 
-# ---
-# Exceptions
-class InvalidPathError(ValueError):
-    pass
+Parent module for all the structures that make up Webgoose
 
-class ComponentExistsError(FileExistsError):
-    pass
+Submodules:
+- File:         All file object representations
+- File Group:   All file grouping classes
+"""
 
-class MalformedComponentNameError(ValueError):
-    pass
-
-class NotAnOrphanError(ValueError):
-    pass
-
-# ---
-# File Structures
-from    .file.file_like         import      FileLike
-
-# ---
-# Components
-from    .component              import      Component
-
-# ---
-# File Groups
-from    .file_group             import      FileGroup
+# > Components
+from    .component      import      Component
 

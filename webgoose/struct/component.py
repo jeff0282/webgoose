@@ -6,11 +6,22 @@ from    typing      import      Any
 from    typing      import      Optional
 from    typing      import      Type
 
-from    webgoose.struct         import      ComponentExistsError
-from    webgoose.struct         import      FileLike
-from    webgoose.struct         import      FileGroup
-from    webgoose.struct         import      MalformedComponentNameError
+from    webgoose.struct     import      FileLike
 
+from    webgoose.struct.file        import      BaseFile
+from    webgoose.struct.file        import      RenderableFile
+from    webgoose.struct.file        import      StaticFile
+
+from    webgoose.struct.file_group      import      ComponentGroup
+from    webgoose.struct.file_group      import      FileGroup
+from    webgoose.struct.file_group      import      RenderGroup    
+
+
+class ComponentExistsError(FileExistsError):
+    pass
+
+class MalformedComponentNameError(ValueError):
+    pass
 
 
 class Component(FileLike):
@@ -80,7 +91,7 @@ class Component(FileLike):
         """
         This component's renderable files as a RenderGroup
         """
-        return RenderGroup((file for file in self.files if isinstance(file, Renderable)))
+        return RenderGroup((file for file in self.files if isinstance(file, RenderableFile)))
     
 
     @property
@@ -88,7 +99,7 @@ class Component(FileLike):
         """
         This component's static files as a FileGroup
         """
-        return FileGroup((file for file in self.files if isinstance(file, Renderable)))
+        return FileGroup((file for file in self.files if isinstance(file, StaticFile)))
 
 
     @property
@@ -114,7 +125,7 @@ class Component(FileLike):
         self._files.add(file_obj)
 
 
-    def get(self, slug: str, _default: Optional[Any] = None, /) -> Type[File] | Any | None:
+    def get(self, slug: str, _default: Optional[Any] = None, /) -> Type[BaseFile] | Any | None:
         """
         Get a file by its slug (relative path)
         """

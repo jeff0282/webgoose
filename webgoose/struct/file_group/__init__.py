@@ -1,8 +1,12 @@
-# webgoose.struct.file_group
+"""
+webgoose.struct.file_group
 
+Contains all File Group Classes
+"""
+
+__all__ = ['FileGroup', 'RenderGroup', 'ComponentGroup']
+
+# > FileGroup Classes
 from    .file_group     import      FileGroup
-
-
-# Subgroups
-from    .subgroup       import      StaticSubgroup      as      _StaticSubgroup
-from    .subgroup       import      RenderSubgroup      as      _RenderSubgroup
+from    .render_group   import      RenderGroup
+from    .cmpt_group     import      ComponentGroup
