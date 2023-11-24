@@ -1,4 +1,5 @@
 
+import  cmarkgfm
 import  frontmatter
 import  os
 
@@ -17,6 +18,7 @@ class Page(Templated):
 
     metadata: dict[str, Any]
 
+    # CLASS ATTRS
     TEMPLATE_PATH_META_KEY = "template"
     DEFAULT_TEMPLATE_STR = r"{{content}}"
 
@@ -78,16 +80,8 @@ class Page(Templated):
                 template = cls.JINJA2_ENV.get_template(v)
 
         return cls(content=content, meta=meta, template=template, **render_args)
-        
-
-        
-
-        
-
-
-    def render
-
-        
     
 
-
+    def render(self, **external_render_args: Any) -> str:
+        self.content = cmarkgfm.github_flavored_markdown_to_html(self.content)
+        return super().render(**external_render_args)
