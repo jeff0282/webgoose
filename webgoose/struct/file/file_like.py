@@ -1,5 +1,8 @@
+"""
+webgoose.struct.file.file_like
+"""
 
-import  abc
+
 import  os
 
 from    typing      import      Any
@@ -16,6 +19,9 @@ class FileLike():
     """
     
     """
+
+    _attach_point: tuple[str, Type['FileLike']] | None
+
 
     def __init__(self) -> None:
         """
@@ -38,24 +44,14 @@ class FileLike():
 
     def __hash__(self) -> int:
         return hash(self.slug)
-
-
-    @property
-    def slug(self) -> str | None:
-        """
-
-        """
-        if self.attach_point:
-            return self.attach_point["slug"]
-        return None
     
 
     @property
-    def attach_point(self) -> tuple[str, Type['FileLike']]:
+    def attach_point(self) -> tuple[str, Type['FileLike']] | None:
         """
 
         """
-        raise NotImplementedError()
+        return self._attach_point
     
 
     @attach_point.setter
@@ -82,7 +78,29 @@ class FileLike():
 
         # if all good, set up child-to-parent connection
         slug = os.path.normpath(slug)
-        self._attach_point = dict(slug=slug, parent=parent)
+        self._attach_point = (slug, parent)
+
+
+    @property
+    def slug(self) -> str:
+        """
+
+        """
+        if self.attach_point:
+            slug = self.attach_point[0]
+            if not slug == os.curdir:
+                return slug
+        return ""
+    
+
+    @property
+    def parent(self) -> Type['FileLike'] | None:
+        """
+        
+        """
+        if self.attach_point:
+            return self.attach_point[1]
+        return None
 
 
     @property

@@ -1,5 +1,7 @@
 
 
+from    webgoose.struct.file    import      Page
 
-class Markdown:
+
+class Markdown(Page):
     pass
