@@ -8,6 +8,8 @@ Submodules:
 - File Group:   All file grouping classes
 """
 
+__all__ = ['Component']
+
 # > Components
 from    .component      import      Component
 

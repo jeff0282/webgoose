@@ -1,5 +1,7 @@
 
 
+from    webgoose.struct.file    import      Templated
 
-class Page:
+
+class Page(Templated):
     pass
