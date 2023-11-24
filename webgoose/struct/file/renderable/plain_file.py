@@ -56,7 +56,7 @@ class PlainFile(RenderableFile):
         self.add_fixed(content=content)
 
         
-    def render(self, context: Context, **render_args: Any) -> str | bytes:
+    def render(self, **render_args: Any) -> str | bytes:
         """
         Render this file into a form that can be
         written to disk

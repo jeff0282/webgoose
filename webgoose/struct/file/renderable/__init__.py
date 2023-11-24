@@ -13,7 +13,6 @@ import  abc
 
 from    typing      import      Any
 
-from    webgoose.struct             import      Context
 from    webgoose.struct.file        import      BaseFile
 
 
@@ -25,7 +24,7 @@ class RenderableFile(BaseFile, metaclass=abc.ABCMeta):
     """
     
     @abc.abstractmethod
-    def render(self, context: Context, **render_args: Any) -> str | bytes:
+    def render(self, **render_args: Any) -> str | bytes:
         """
         Convert this file object into a string or bytes 
         to be output to disk

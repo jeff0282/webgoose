@@ -11,7 +11,7 @@ Submodules:
 - File Group:   All file grouping classes
 """
 
-__all__ = ['Context', 'Component']
+__all__ = ['Component']
 
 # > Context
 from    .context        import      Context
