@@ -59,7 +59,7 @@ class Templated(PlainFile):
         Create a Templated object using a Jinja2 Template File
         """
 
-        template = cls.get_template(template_path)
+        template = cls.get_template_from_path(template_path)
         return cls(content=content, template=template, **render_args)
     
 
@@ -79,11 +79,11 @@ class Templated(PlainFile):
     
 
     @classmethod
-    def get_template(cls, path: os.PathLike | str) -> Template:
+    def get_template_from_path(cls, path: os.PathLike | str) -> Template:
         """
         Get a Template from a file
 
-        Calls Jinja2 under-the-hood; allows loading template from pathcusing 
+        Calls Jinja2 under-the-hood; allows loading template from path using 
         Windows-style paths (`Jinja2.get_template()` only supports POXIX-Style paths)
 
         Raises TemplateNotFound error if not found

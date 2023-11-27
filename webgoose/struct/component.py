@@ -55,7 +55,7 @@ class Component(FileLike):
     
 
     def __hash__(self) -> int:
-        return hash(self.name)
+        return hash(self.name.casefold())
 
 
     def __contains__(self, cmp: Any) -> bool:

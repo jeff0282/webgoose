@@ -43,7 +43,7 @@ class FileLike():
     
 
     def __hash__(self) -> int:
-        return hash(self.slug)
+        return hash(self.slug.casefold())
     
 
     @property
