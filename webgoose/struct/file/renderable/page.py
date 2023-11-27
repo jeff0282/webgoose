@@ -19,7 +19,7 @@ class Page(Templated):
     metadata: dict[str, Any]
 
     # CLASS ATTRS
-    TEMPLATE_PATH_META_KEY = "template"
+    TEMPLATE_META_KEY = "template"
     DEFAULT_TEMPLATE_STR = r"{{content}}"
 
     def __init__(self,
@@ -32,12 +32,9 @@ class Page(Templated):
         Create a Page File instance using some content, metadata, and a template
         """
 
-        # set the stuff for superclass call
+        # Set defaults for content and template 
         content = content if content else ""
-        if template: 
-            template = template
-        else:
-            template = self.JINJA2_ENV.from_string(self.DEFAULT_TEMPLATE_STR)
+        template = template if template else self.get_template_from_string(self.DEFAULT_TEMPLATE_STR)
         
         # set instance vars (cheers super)
         super().__init__(content=content, template=template, **render_args)
@@ -45,14 +42,13 @@ class Page(Templated):
 
         # put a copy of content under plain_content
         # content will be coverted to markup when `render()` is called
-        self.context.add_fixed(plain_content=None)
+        self.context.add_fixed(plain_content=content)
 
     
     @property
     def plain_content(self) -> str:
         """
-        The original version of this file's content,
-        before markup conversion
+        The plain text version of this Page's content
         """
         return self.context['plain_content']
 
@@ -63,22 +59,14 @@ class Page(Templated):
         Create a Page instance from a markdown + YAML frontmatter formatted file
         """
 
-        if not os.path.exists(path):
-            if not os.path.isfile():
-                raise ValueError(f"The provided path '{str(path)}' is not a file")
-        else:
-            raise FileNotFoundError(f"The provided path '{str(path)} doesn't exist'")
-
         # split and parse frontmatter and content 
         with open(path, "r", encoding='utf8') as f:
             meta, content = frontmatter.parse(f)
 
-        # get template if provided in meta, otherwise set default
-        template = cls.JINJA2_ENV.from_string(cls.DEFAULT_TEMPLATE_STR)
-        for k, v in meta.values():
-            if k.casefold() == cls.TEMPLATE_PATH_META_KEY.casefold():
-                template = cls.JINJA2_ENV.get_template(v)
+        # get template if provided in meta
+        template = meta.get(cls.TEMPLATE_META_KEY, None)
 
+        # create the thing :3
         return cls(content=content, meta=meta, template=template, **render_args)
     
 
