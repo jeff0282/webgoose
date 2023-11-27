@@ -7,6 +7,7 @@ from    typing      import      Type
 from    jinja2      import      Environment
 from    jinja2      import      FileSystemLoader
 from    jinja2      import      Template
+from    pathlib     import      Path
 
 from    webgoose.struct.file    import      PlainFile
 
@@ -48,40 +49,60 @@ class Templated(PlainFile):
 
 
     @classmethod
-    def from_template_file(cls,
-                           template_path: os.PathLike | str,
-                           *,
-                           content: str,
-                           **render_args
-                           ) -> Type['Templated']:
+    def from_file(cls,
+                  template_path: os.PathLike | str,
+                  *,
+                  content: str,
+                  **render_args
+                  ) -> Type['Templated']:
         """
         Create a Templated object using a Jinja2 Template File
         """
 
-        if not os.path.exists(template_path):
-            if not os.path.isfile(template_path):
-                raise ValueError(f"The path specified '{str(template_path)}' is not a file")
-        else:
-            raise FileNotFoundError(f"The Template file specified at path '{str(template_path)}' does not exist")
-        
-        template = cls.JINJA2_ENV.get_template(template_path)
+        template = cls.get_template(template_path)
         return cls(content=content, template=template, **render_args)
     
 
     @classmethod
-    def from_template_str(cls,
-                          *,
-                          content: str,
-                          template_str: str,
-                          **render_args
-                          ) -> Type['Templated']:
+    def from_string(cls,
+                    *,
+                    content: str,
+                    template_str: str,
+                    **render_args
+                    ) -> Type['Templated']:
         """
         Create a Templated instance using a string Jinja2 Template
         """
 
-        template = cls.JINJA2_ENV.from_string(template_str)
+        template = cls.get_template_from_string(template_str)
         return cls(content=content, template=template, **render_args)
+    
 
+    @classmethod
+    def get_template(cls, path: os.PathLike | str) -> Template:
+        """
+        Get a Template from a file
+
+        Calls Jinja2 under-the-hood; allows loading template from pathcusing 
+        Windows-style paths (`Jinja2.get_template()` only supports POXIX-Style paths)
+
+        Raises TemplateNotFound error if not found
+        """
+
+        # Jinja2 uses POSIX-Style filepaths regardless of platform
+        path = Path(path).as_posix()
+        return cls.JINJA2_ENV.get_template(path)
+
+
+    @classmethod
+    def get_template_from_string(cls, string_template: str) -> Template:
+        """
+        Create a Template from a string
+
+        Calls Jinja2 under-the-hood
+        """
+
+        return cls.JINJA2_ENV.from_string(string_template)
 
 
     def render(self, **external_render_args) -> str:
@@ -97,7 +118,5 @@ class Templated(PlainFile):
 
         # render the stuff
         self.template.render(self.context.to_dict())
-
-
 
 
