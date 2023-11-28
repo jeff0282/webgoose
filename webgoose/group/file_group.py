@@ -9,7 +9,7 @@ from    typing      import      Optional
 
 from    wcmatch     import      glob
 
-from    webgoose.struct     import      BaseFile
+from    webgoose.filelike     import      BaseFile
 
 
 class FileGroup:

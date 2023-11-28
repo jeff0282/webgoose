@@ -11,8 +11,8 @@ from    typing      import      Type
 from    pathvalidate    import      ValidationError
 from    pathvalidate    import      validate_filepath
 
-from    webgoose.struct     import      InvalidPathError
-from    webgoose.struct     import      NotAnOrphanError
+from    ..filelike        import      InvalidPathError
+from    ..filelike        import      NotAnOrphanError
 
 
 class FileLike():
@@ -129,7 +129,7 @@ class FileLike():
         /this/is/a/file.txt -> 'file'
         """
         try:
-            i = self.filename.rindex(os.extsep, 1)
+            i = self.filename.index(os.extsep, 1)
             return self.filename[:i]
 
         except:
@@ -147,7 +147,7 @@ class FileLike():
         archive.tar.gz -> '.tar.gz'
         """
         try:
-            i = self.filename.rindex(os.extsep, 1)
+            i = self.filename.index(os.extsep, 1)
             return self.filename[i:]
 
         except:
@@ -176,10 +176,9 @@ class FileLike():
         Returns a tuple of each parent node from this node,
         in order root-to-node
         """
-        parts = [self]
-
+        parts = []
         current_node = self
-        while current_node.parent:
+        while current_node:
             parts.append(current_node)
             current_node = current_node.parent
 
@@ -193,10 +192,7 @@ class FileLike():
         """
 
         # join together segments by their paths
-        path = os.sep.join(parts.slug for parts in self.parts if parts.slug)
-        
-        # some slugs may have os.curdir as their
-        return os.path.normpath(path)
+        return os.sep.join(parts.slug for parts in self.parts if parts.slug)
 
 
     def validate_slug(self, slug: str):
@@ -218,4 +214,3 @@ class FileLike():
         # if path well formed, check if relative
         if os.path.isabs(slug):
             raise InvalidPathError(f"Invalid Path: '{slug}' path given must be relative, not absolute")
-        

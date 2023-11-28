@@ -9,7 +9,7 @@ from    jinja2      import      FileSystemLoader
 from    jinja2      import      Template
 from    pathlib     import      Path
 
-from    webgoose.struct.file    import      PlainFile
+from    ..filelike    import      PlainFile
 
 
 class Templated(PlainFile):
@@ -59,7 +59,7 @@ class Templated(PlainFile):
         Create a Templated object using a Jinja2 Template File
         """
 
-        template = cls.get_template(template_path)
+        template = cls.get_template_from_path(template_path)
         return cls(content=content, template=template, **render_args)
     
 
@@ -79,7 +79,7 @@ class Templated(PlainFile):
     
 
     @classmethod
-    def get_template(cls, path: os.PathLike | str) -> Template:
+    def get_template_from_path(cls, path: os.PathLike | str) -> Template:
         """
         Get a Template from a file
 

@@ -4,8 +4,8 @@ import  os
 from    pathvalidate    import      ValidationError
 from    pathvalidate    import      validate_filename
 
-from    webgoose.struct     import      FileLike
-from    webgoose.struct     import      InvalidPathError
+from    ..filelike        import      FileLike
+from    ..filelike        import      InvalidPathError
 
 
 class BaseFile(FileLike):

@@ -6,7 +6,7 @@ from    typing      import      Any
 from    typing      import      Type
 
 
-class Context:
+class RenderContext:
     """
     A simple class that restricts addition of key/value pairs based
     on what already exists in it's 'fixed' dictionary

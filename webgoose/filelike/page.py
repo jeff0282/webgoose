@@ -8,7 +8,7 @@ from    typing      import      Type
 
 from    jinja2      import      Template
 
-from    webgoose.struct.file    import      Templated
+from    ..filelike    import      Templated
 
 
 class Page(Templated):
