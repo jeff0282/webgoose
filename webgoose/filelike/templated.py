@@ -9,7 +9,7 @@ from    jinja2      import      FileSystemLoader
 from    jinja2      import      Template
 from    pathlib     import      Path
 
-from    webgoose.struct.file    import      PlainFile
+from    ..filelike    import      PlainFile
 
 
 class Templated(PlainFile):
@@ -83,7 +83,7 @@ class Templated(PlainFile):
         """
         Get a Template from a file
 
-        Calls Jinja2 under-the-hood; allows loading template from path using 
+        Calls Jinja2 under-the-hood; allows loading template from pathcusing 
         Windows-style paths (`Jinja2.get_template()` only supports POXIX-Style paths)
 
         Raises TemplateNotFound error if not found

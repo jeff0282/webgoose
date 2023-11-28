@@ -11,8 +11,8 @@ from    typing      import      Type
 from    pathvalidate    import      ValidationError
 from    pathvalidate    import      validate_filepath
 
-from    webgoose.struct     import      InvalidPathError
-from    webgoose.struct     import      NotAnOrphanError
+from    ..filelike        import      InvalidPathError
+from    ..filelike        import      NotAnOrphanError
 
 
 class FileLike():
@@ -43,7 +43,7 @@ class FileLike():
     
 
     def __hash__(self) -> int:
-        return hash(self.slug.casefold())
+        return hash(self.slug)
     
 
     @property

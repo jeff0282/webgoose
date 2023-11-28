@@ -20,10 +20,9 @@ from    .version                import      __version__
 
 # ---
 # STRUCTS
-# > site & components
-from    .struct                 import      *
+# > files and filelike stuffs
+from    .filelike               import      *
 
-# > files & file groups
-from    .struct.file            import      *
-from    .struct.file_group      import      *
+# > site & components
+from    .component              import      Component
 

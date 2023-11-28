@@ -8,7 +8,7 @@ from    typing      import      Type
 
 from    jinja2      import      Template
 
-from    webgoose.struct.file    import      Templated
+from    ..filelike    import      Templated
 
 
 class Page(Templated):
@@ -44,18 +44,6 @@ class Page(Templated):
         # content will be coverted to markup when `render()` is called
         self.context.add_fixed(plain_content=content)
 
-
-    def __getitem__(self, key: str) -> Any:
-        return self.metadata[key]
-    
-
-    def __setitem__(self, key: str, value: Any) -> None:
-        self.metadata[key] = value
-
-
-    def __delitem__(self, key: str) -> None:
-        self.metadata.pop(key)
-
     
     @property
     def plain_content(self) -> str:
@@ -76,10 +64,7 @@ class Page(Templated):
             meta, content = frontmatter.parse(f)
 
         # get template if provided in meta
-        template = None
-        template_path = meta.get(cls.TEMPLATE_META_KEY, None)
-        if template_path:
-            template = cls.get_template_from_path(template_path)
+        template = meta.get(cls.TEMPLATE_META_KEY, None)
 
         # create the thing :3
         return cls(content=content, meta=meta, template=template, **render_args)

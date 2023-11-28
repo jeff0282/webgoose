@@ -9,8 +9,8 @@ Rendering this type of file just outputs its content
 
 from    typing      import      Any
 
-from    webgoose.struct         import      Context
-from    webgoose.struct.file    import      RenderableFile
+from    ..filelike    import      RenderContext
+from    ..filelike    import      RenderableFile
 
 
 class PlainFile(RenderableFile):
@@ -32,7 +32,7 @@ class PlainFile(RenderableFile):
         Create a plain file object, using a string or bytes
         as content
         """
-        self.context = Context()
+        self.context = RenderContext()
         self.content = content
         super().__init__()
 

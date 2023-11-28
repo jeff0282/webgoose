@@ -9,14 +9,14 @@ from    typing      import      Optional
 
 from    wcmatch     import      glob
 
-from    webgoose.struct.file     import      FileLike
+from    webgoose.filelike     import      BaseFile
 
 
 class FileGroup:
 
-    _files: set[Type[FileLike]]
+    _files: set[Type[BaseFile]]
 
-    def __init__(self, initlist: Iterable[FileLike]) -> None:
+    def __init__(self, initlist: Iterable[BaseFile]) -> None:
         self._files = set(initlist)
 
     
@@ -32,19 +32,16 @@ class FileGroup:
         return bool(self._files)
 
 
-    def __iter__(self) -> Iterator[Type[FileLike]]:
+    def __iter__(self) -> Iterator[Type[BaseFile]]:
         for file in self._files:
             yield file
 
 
     def __contains__(self, cmp: Any) -> bool:
-        if type(cmp) == str:
-            return cmp.casefold() in self._files
-        
         return cmp in self._files
     
 
-    def get(self, slug: str, _default: Any | None = None) -> Type[FileLike] | Any | None:
+    def get(self, slug: str, _default: Optional[Any] = None) -> Type[BaseFile] | Any | None:
         slug = os.path.normpath(slug)
 
         for file in self._files:

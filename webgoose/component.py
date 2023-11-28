@@ -6,15 +6,14 @@ from    typing      import      Any
 from    typing      import      Optional
 from    typing      import      Type
 
-from    webgoose.struct     import      FileLike
+from    webgoose.filelike       import      FileLike
+from    webgoose.filelike       import      BaseFile
+from    webgoose.filelike       import      RenderableFile
+from    webgoose.filelike       import      StaticFile
 
-from    webgoose.struct.file        import      BaseFile
-from    webgoose.struct.file        import      RenderableFile
-from    webgoose.struct.file        import      StaticFile
-
-from    webgoose.struct.file_group      import      ComponentGroup
-from    webgoose.struct.file_group      import      FileGroup
-from    webgoose.struct.file_group      import      RenderGroup    
+from    webgoose.group          import      ComponentGroup
+from    webgoose.group          import      FileGroup
+from    webgoose.group          import      RenderGroup    
 
 
 class ComponentExistsError(FileExistsError):
@@ -55,7 +54,7 @@ class Component(FileLike):
     
 
     def __hash__(self) -> int:
-        return hash(self.name.casefold())
+        return hash(self.name)
 
 
     def __contains__(self, cmp: Any) -> bool:
