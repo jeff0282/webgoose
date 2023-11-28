@@ -61,8 +61,8 @@ def test_lone_dirname(lone_filelike: FileLike):
 def test_lone_basename(lone_filelike: FileLike):
     assert lone_filelike.basename == ""
 
-def test_lone_basename(lone_filelike: FileLike):
-    assert lone_filelike.parts == tuple()
+def test_lone_parts(lone_filelike: FileLike):
+    assert lone_filelike.parts == (lone_filelike,)
 
 def test_lone_path(lone_filelike: FileLike):
     assert lone_filelike.path == ""

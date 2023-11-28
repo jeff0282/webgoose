@@ -193,10 +193,7 @@ class FileLike():
         """
 
         # join together segments by their paths
-        path = os.sep.join(parts.slug for parts in self.parts if parts.slug)
-        
-        # some slugs may have os.curdir as their
-        return os.path.normpath(path)
+        return os.sep.join(parts.slug for parts in self.parts if parts.slug)
 
 
     def validate_slug(self, slug: str):
