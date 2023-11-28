@@ -22,7 +22,7 @@ class BaseFile(FileLike):
         """
 
         # seperate filename for validation
-        filename = os.path.basename
+        filename = os.path.basename(slug)
 
         # Prevent files from being called the current directory shorthand
         if filename == os.curdir:
