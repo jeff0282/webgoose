@@ -1,25 +1,12 @@
 """
-Unit Tests for webgoose.struct.file.FileLike
+Select Unit Tests for webgoose.filelike.FileLike
+
+Test suite for a FileLike instance with no `attach_point` set
 """
 
 import  pytest
 
-from    webgoose             import      Component
 from    webgoose.filelike    import      FileLike
-
-
-def filelike_in_component(slug: str) -> FileLike:
-    """
-    Create a filelike object with a component parent
-
-    Slug and parent are only set when attached to a parent
-    Components are pretty much a poorman's directory
-    """
-
-    parent = Component("parent")
-    child = FileLike(slug)
-    parent.add(slug, child)
-    return child
 
 
 @pytest.fixture
@@ -29,7 +16,6 @@ def lone_filelike() -> FileLike:
 
     (no parent = no attach point = no slug = no filename or anything)
     """
-
     return FileLike()
 
 

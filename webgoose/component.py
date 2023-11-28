@@ -82,7 +82,7 @@ class Component(FileLike):
         """
         This Component's files as a FileGroup
         """
-        return FileGroup(self.files)
+        return FileGroup(self._files)
 
 
     @property
@@ -118,10 +118,10 @@ class Component(FileLike):
             raise FileExistsError(f"File with slug '{slug}' already exists in '{self}'")
 
         if isinstance(file, (os.PathLike, str)):
-            file_obj = StaticFile(file_obj)
+            file = StaticFile(file)
 
-        file.attach_point = (slug, file_obj)
-        self._files.add(file_obj)
+        file.attach_point = (slug, self)
+        self._files.add(file)
 
 
     def get(self, slug: str, _default: Optional[Any] = None, /) -> Type[BaseFile] | Any | None:

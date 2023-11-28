@@ -129,7 +129,7 @@ class FileLike():
         /this/is/a/file.txt -> 'file'
         """
         try:
-            i = self.filename.rindex(os.extsep, 1)
+            i = self.filename.index(os.extsep, 1)
             return self.filename[:i]
 
         except:
@@ -147,7 +147,7 @@ class FileLike():
         archive.tar.gz -> '.tar.gz'
         """
         try:
-            i = self.filename.rindex(os.extsep, 1)
+            i = self.filename.index(os.extsep, 1)
             return self.filename[i:]
 
         except:
