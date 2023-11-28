@@ -45,6 +45,9 @@ class RenderableFile(BaseFile, metaclass=abc.ABCMeta):
 # > Non-Renderable Built-in Types
 from    .static_file        import      StaticFile
 
+# > Directory-Like
+from    .component          import      Component
+
 # > Renderable Built-in Types
 from    .plain_file         import      PlainFile
 from    .templated          import      Templated

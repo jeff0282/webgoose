@@ -214,4 +214,3 @@ class FileLike():
         # if path well formed, check if relative
         if os.path.isabs(slug):
             raise InvalidPathError(f"Invalid Path: '{slug}' path given must be relative, not absolute")
-        

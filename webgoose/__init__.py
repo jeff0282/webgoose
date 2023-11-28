@@ -23,6 +23,3 @@ from    .version                import      __version__
 # > files and filelike stuffs
 from    .filelike               import      *
 
-# > site & components
-from    .component              import      Component
-

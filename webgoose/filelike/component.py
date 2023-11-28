@@ -6,10 +6,10 @@ from    typing      import      Any
 from    typing      import      Optional
 from    typing      import      Type
 
-from    webgoose.filelike       import      FileLike
-from    webgoose.filelike       import      BaseFile
-from    webgoose.filelike       import      RenderableFile
-from    webgoose.filelike       import      StaticFile
+from    ..filelike       import      FileLike
+from    ..filelike       import      BaseFile
+from    ..filelike       import      RenderableFile
+from    ..filelike       import      StaticFile
 
 from    webgoose.group          import      ComponentGroup
 from    webgoose.group          import      FileGroup

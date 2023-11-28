@@ -2,13 +2,16 @@
 Select Unit Tests for webgoose.filelike.FileLike
 
 Test suite for a FileLike instance attached to a Component
+
+As filelike objects require being attached to a parent to set their slug,
+this suite provides validation of most of the slug manipulation methods
 """
 
 import  pytest
 
 from    pytest_cases            import      parametrize_with_cases
 
-from    webgoose                import      Component
+from    webgoose.filelike       import      Component
 from    webgoose.filelike       import      FileLike
 
 
