@@ -176,10 +176,9 @@ class FileLike():
         Returns a tuple of each parent node from this node,
         in order root-to-node
         """
-        parts = [self]
-
+        parts = []
         current_node = self
-        while current_node.parent:
+        while current_node:
             parts.append(current_node)
             current_node = current_node.parent
 
