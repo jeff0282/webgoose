@@ -14,6 +14,9 @@ class InvalidPathError(ValueError):
 class NotAnOrphanError(ValueError):
     pass
 
+class NotIndexableError(ValueError):
+    pass
+
 # ---
 # Module Imports
 # > Supporting Classes

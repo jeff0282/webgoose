@@ -7,12 +7,14 @@ import  os
 
 from    typing      import      Any
 from    typing      import      Type
+from    typing      import      TypeVar
 
 from    pathvalidate    import      ValidationError
 from    pathvalidate    import      validate_filepath
 
-from    ..filelike        import      InvalidPathError
-from    ..filelike        import      NotAnOrphanError
+from    ..filelike      import      InvalidPathError
+from    ..filelike      import      NotAnOrphanError
+from    ..filelike      import      NotIndexableError
 
 
 class FileLike():
@@ -20,7 +22,16 @@ class FileLike():
     
     """
 
-    _attach_point: tuple[str, Type['FileLike']] | None
+    # Attachment Point
+    # When a FileLike is attached to a parent, it's relative path (slug)
+    # from that parent is set.
+    #
+    # The attach_point stores this information in a dict with 3 entries
+    # - slug: The relative path from the parent to attach at
+    # - is_index: Whether or not this instance is a Directory Index
+    # - parent: A reference to the parent filelike instance
+    AttachPoint = TypeVar("AttachPoint", dict[str, str | bool | Type['FileLike']])
+    _attach_point: AttachPoint | None
 
 
     def __init__(self) -> None:
@@ -47,38 +58,60 @@ class FileLike():
     
 
     @property
-    def attach_point(self) -> tuple[str, Type['FileLike']] | None:
+    def indexable(self) -> bool:
         """
+        Returns True if this file can be used as a Directory Index
+        """
+        return hasattr(self, "index_filename")
+    
 
+    @property
+    def is_index(self) -> bool:
+        """
+        Returns True if this file is attached and is a Directory Index
+        """
+        if self.attach_point:
+            return self.attach_point['is_index']
+        
+        return False
+    
+
+    @property
+    def attach_point(self) -> AttachPoint | None:
+        """
+        A dictionary containing details on this instance's attachment to its
+        parent
+
+        If not attached, returns None
         """
         return self._attach_point
     
 
-    @attach_point.setter
-    def attach_point(self, 
-                     attach_pnt_tuple: tuple[str, Type['FileLike']]
-                     ) -> None:
+    def set_attach_point(self, 
+                         *, 
+                         slug: str, 
+                         parent: Type['FileLike'], 
+                         is_index: bool = False
+                         ) -> None:
         """
         
         """
-
-        # Attempt to extract necessary info, string slug and parent component
-        try:
-            slug, parent = attach_pnt_tuple
-        
-        except ValueError as e:
-            raise ValueError(f"Attach Point must be an interable in form '(str slug, parent component)'") from e
 
         # check if node is already attached
         if self.attach_point:
-            raise NotAnOrphanError(f"Cannot set attachment point, '{self}' is already attached to '{self.parent}'")
+            raise NotAnOrphanError(f"Cannot set attachment point; '{self}' is already attached to '{self.parent}'")
+        
+        # if attempting to set as directory index, ensure that's possible
+        if is_index:
+            if not self.indexable:
+                raise NotIndexableError(f"Cannot attach as a directory index; '{self}' is not indexable")
         
         # validate the string slug
         self.validate_slug(slug)
 
         # if all good, set up child-to-parent connection
         slug = os.path.normpath(slug)
-        self._attach_point = (slug, parent)
+        self._attach_point = dict(slug=slug, parent=parent, is_index=is_index)
 
 
     @property
@@ -87,7 +120,7 @@ class FileLike():
 
         """
         if self.attach_point:
-            slug = self.attach_point[0]
+            slug = self.attach_point["slug"]
             if not slug == os.curdir:
                 return slug
         return ""
@@ -99,7 +132,7 @@ class FileLike():
         
         """
         if self.attach_point:
-            return self.attach_point[1]
+            return self.attach_point["parent"]
         return None
 
 
