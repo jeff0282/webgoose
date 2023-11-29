@@ -1,11 +1,65 @@
 ## Webgoose - A Static-Site Generating Micro-Framework
 
-**[Still very much in development, I swear this project never gets anywhere..]**
+**[Roughly Mid-Way In-Development]**
 
-In its 12th(?) round of 'back to the drawing board', Webgoose has now become a micro-framework designed around compartmentalisation.
+### Le Petit Preface
+Over 12 months of development. 12 complete restarts. This project has become something of a Sisyphus of Software, never going anywhere.
 
-Primary to the objectives of Webgoose are its Components and their Filegroups, which allow for easy searching and grouping of both static and renderable files by their attributes, attached together in a tree structure.
+Starting life as a imageboard-style personal website engine (which worked scarily well), it went through a minimalism phase, a tree-centric phase, multiple identity crises, and has now developed into a static site generator framework
 
-The current iteration of Webgoose is inspired by a similar framework ['Lightweight'](https://github.com/mdrachuk/lightweight), and shares a similar API.
+Who knows, maybe this idea will fall through as well. Though I have hope that this revision will become something!
 
-More information and documentation will be made available as the project progresses. This iteration of Webgoose seems to be going better than usual...!
+
+### Provisional API
+
+```python
+from    pathlib     import      Path
+
+from    webgoose    import      Component
+from    webgoose    import      Page
+from    webgoose    import      Site
+
+
+site = Site()
+
+
+@site.attach()
+def root(component):
+    """
+    The root of the site 
+    """
+    component.add("index.html", Page(".src/index.md"))
+
+
+@root.attach("blog/")
+def blog(component):
+    """
+    Blog section of the site
+    """
+
+    tags = component.posts.group("tags", include_missing=True)
+    tag_page = Page(template=".template/tags.jinja2", tags=tags)
+    
+    
+@blog.attach("posts/")
+def posts(component):
+    """
+    Posts within the blog section of the site
+    """
+
+    for path in Path.glob(".src/posts/*.md")
+        component.add(path.stem + ".html", Page(path))
+
+
+if __file__ == __main__:
+    site.render("./build")
+
+```
+
+
+### Credits & Notes
+
+Webgoose has been heavily inspired by a variety of projects and websites:
+
+- ['Lightweight'](https://github.com/mdrachuk/lightweight) - A Nice & Simple Static-Site Generator Framework; Inspiration for quite a lot of the Webgoose API.
+- ['Kagami'](https://github.com/microsounds/kagami) and ['microsounds.github.io'](https://microsounds.github.io) - A 'Web-1.0 Static Microblog Processor' written in Shell, and the author's website built with it. I cannot tell you how much I love these two projects..!!
