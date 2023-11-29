@@ -1,6 +1,6 @@
 # Webgoose - A Static-Site Generator Framework
 
-**[Roughly Mid-Way In-Development]**
+**[Roughly Mid-Way In-Development]:** For an idea of how Webgoose development has been, please see ['webgoose.net'](https://www.webgoose.net)
 
 ## Le Petit Preface
 Over 12 months of development. 12 complete restarts. This project has become something of a Sisyphus of Software, never going anywhere.
