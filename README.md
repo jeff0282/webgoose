@@ -12,12 +12,7 @@ Who knows, maybe this idea will fall through as well. Though I have hope that th
 
 ## Provisional API
 This is the proposed API for Webgoose. It's not exactly polished, but it's getting there :)
-
 ```python
-"""
-An Example Site to demonstrate the proposed Webgoose API
-"""
-
 from    pathlib     import      Path
 
 from    webgoose    import      Component
@@ -63,6 +58,7 @@ if __file__ == __main__:
 
 
 ## Credits & Notes
+
 Webgoose has been heavily inspired by a variety of projects and websites:
 
 - ['Lightweight'](https://github.com/mdrachuk/lightweight) - A Nice & Simple Static-Site Generator Framework; Inspiration for quite a lot of the Webgoose API.
