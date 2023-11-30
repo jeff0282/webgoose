@@ -9,6 +9,8 @@ from    typing      import      Any
 from    typing      import      Type
 from    typing      import      TypeVar
 
+from    pathlib         import      Path
+from    pathlib         import      PureWindowsPath
 from    pathvalidate    import      ValidationError
 from    pathvalidate    import      validate_filepath
 
@@ -19,7 +21,10 @@ from    ..filelike      import      NotIndexableError
 
 class FileLike():
     """
-    
+    NOTE: Due to the architecture of FileLikes, root nodes cannot
+    have slugs as slugs are only set when attaching to a parent.
+
+    As a result, FileLike paths will ALWAYS be relative to the root node
     """
 
     # Attachment Point
@@ -145,15 +150,6 @@ class FileLike():
 
 
     @property
-    def dirname(self) -> str:
-        """
-        Returns the parent directory as a path
-        """
-        dirname, _ =  os.path.split(self.slug)
-        return dirname
-
-
-    @property
     def basename(self) -> str:
         """
         Returns the basename of a file object
@@ -221,11 +217,60 @@ class FileLike():
     @property
     def path(self) -> str:
         """
-        Returns the full string path of a file object
+        Returns a Path object corresponding to this file's build
+        path, relative to the current directory
         """
 
         # join together segments by their paths
-        return os.sep.join(parts.slug for parts in self.parts if parts.slug)
+        # if slug is falsey, skip for path building
+        return Path(parts.slug for parts in self.parts if parts.slug)
+
+
+    @property
+    def full_uri(self) -> str:
+        """
+        Returns the full, unabbreviated URI of this file as a string
+        """
+
+        # join together segments by their paths
+        # if slug is falsey, skip for path building
+        return self.construct_uri(parts.slug for parts in self.parts if parts.slug)
+    
+
+    @property
+    def dirname(self) -> str:
+        """
+        Returns this file's URI one level up
+        """
+        dirname, _ =  os.path.split(self.full_uri)
+        return dirname
+
+
+    @property
+    def uri(self) -> str:
+        """
+        Returns the URI of this file as a string
+
+        Abbreviates URIs for Directory Indexes
+        """
+
+        # if this instance is a directory index, return the dirname
+        if self.is_index:
+            return self.dirname
+        
+        # otherwise, get the full uri
+        return self.full_uri
+    
+
+    def construct_uri(self, *args: str) -> str:
+        """
+        Constructs a URI out of strings
+        """
+
+        # As FileLike paths are always relative to the root node
+        # we need to add a POSIX seperator to the start
+
+        return "/" + PureWindowsPath(*args).as_posix()
 
 
     def validate_slug(self, slug: str):
