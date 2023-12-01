@@ -2,7 +2,6 @@
 webgoose.struct.file.file_like
 """
 
-
 import  os
 
 from    typing      import      Any
@@ -35,8 +34,7 @@ class FileLike():
     # - slug: The relative path from the parent to attach at
     # - is_index: Whether or not this instance is a Directory Index
     # - parent: A reference to the parent filelike instance
-    AttachPoint = TypeVar("AttachPoint", dict[str, str | bool | Type['FileLike']])
-    _attach_point: AttachPoint | None
+    _attach_point: dict[str, Any] | None
 
 
     def __init__(self) -> None:
@@ -82,7 +80,7 @@ class FileLike():
     
 
     @property
-    def attach_point(self) -> AttachPoint | None:
+    def attach_point(self) -> dict[str, Any] | None:
         """
         A dictionary containing details on this instance's attachment to its
         parent
@@ -115,19 +113,19 @@ class FileLike():
         self.validate_slug(slug)
 
         # if all good, set up child-to-parent connection
+        # normalise path, convert to uri-like representation, strip curdir ref if necessary
         slug = os.path.normpath(slug)
+        slug = "" if slug == os.curdir else self.construct_rel_uri(slug)
         self._attach_point = dict(slug=slug, parent=parent, is_index=is_index)
 
 
     @property
     def slug(self) -> str:
         """
-
+        This file's path relative to it's parent, as a relative URI
         """
         if self.attach_point:
-            slug = self.attach_point["slug"]
-            if not slug == os.curdir:
-                return slug
+            return self.attach_point["slug"]
         return ""
     
 
@@ -224,26 +222,17 @@ class FileLike():
         # join together segments by their paths
         # if slug is falsey, skip for path building
         return Path(parts.slug for parts in self.parts if parts.slug)
-
-
-    @property
-    def full_uri(self) -> str:
-        """
-        Returns the full, unabbreviated URI of this file as a string
-        """
-
-        # join together segments by their paths
-        # if slug is falsey, skip for path building
-        return self.construct_uri(parts.slug for parts in self.parts if parts.slug)
     
 
     @property
     def dirname(self) -> str:
         """
         Returns this file's URI one level up
+
+        If this file is a Directory Index, returns said directory
         """
-        dirname, _ =  os.path.split(self.full_uri)
-        return dirname
+        
+        return os.path.dirname(self.slug)
 
 
     @property
@@ -251,26 +240,44 @@ class FileLike():
         """
         Returns the URI of this file as a string
 
-        Abbreviates URIs for Directory Indexes
-        """
-
-        # if this instance is a directory index, return the dirname
-        if self.is_index:
-            return self.dirname
-        
-        # otherwise, get the full uri
-        return self.full_uri
-    
-
-    def construct_uri(self, *args: str) -> str:
-        """
-        Constructs a URI out of strings
+        Abbreviates filenames for Directory Indexes
         """
 
         # As FileLike paths are always relative to the root node
         # we need to add a POSIX seperator to the start
 
-        return "/" + PureWindowsPath(*args).as_posix()
+        # construct uri from parts slugs, skipping falsey values
+        return "/" + self.construct_uri((parts.slug for parts in self.parts if parts.slug), make_index=self.is_index)
+
+
+    @property
+    def rel_uri(self) -> str:
+        """
+        Return the URI of this file as a string, relative to it's parent
+
+        Abbreviates filenames for Directory Indexes
+        """
+
+        return self.construct_rel_uri(self.slug, make_index=self.is_index)
+
+
+    def construct_rel_uri(self, *args: str, make_index: bool = False) -> str:
+        """
+        Constructs a relative URI-like string out of strings
+
+        Strings can be directory/filenames and/or relative paths, and in NT and/or POSIX form.
+
+        `is_index`: [default = False] Returns the dirname of the result as the URI
+        """
+
+        # As FileLike paths are always relative to the root node
+        # we need to add a POSIX seperator to the start
+
+        uri = PureWindowsPath(*args).as_posix()
+        if make_index:
+            return os.path.dirname(uri)
+        
+        return uri
 
 
     def validate_slug(self, slug: str):

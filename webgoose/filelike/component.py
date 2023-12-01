@@ -19,6 +19,7 @@ from    webgoose.group          import      RenderGroup
 class ComponentExistsError(FileExistsError):
     pass
 
+
 class MalformedComponentNameError(ValueError):
     pass
 
@@ -50,7 +51,7 @@ class Component(FileLike):
 
 
     def __bool__(self) -> bool:
-        return bool(self.files)
+        return bool(self.files) and bool(self.subcomponents)
     
 
     def __hash__(self) -> int:
@@ -130,6 +131,43 @@ class Component(FileLike):
         """
 
         return self.files.get(slug, _default)
+    
+
+    def group_meta(self, meta: str, *, include_missing: bool = False) -> dict[str, Any]:
+        """
+        Categorise all of this component's pages by a metadata tag
+
+        Creates a dict with each of the values of a certain key found in the metadata for all files.
+
+        Only metadata values that are hashable will be included (strings, integers, etc). 
+        Non-hashables types are simply ignored.
+        
+        For iterable values, each item of the iterable will be used (provided the value is hashable)
+        
+        i.e:
+          If we were to call component.group_meta("tags")
+
+          A child page 'camping-post.html' with
+          `tags: [outdoors, hiking, camping]`
+
+          Would translate to:
+        ```
+        {
+            'outdoors': [Page('camping-post.html']),
+            'hiking': [Page('camping-post.html')],
+            'camping': [Page('camping-post.html)] 
+        }
+        ```
+
+          Any other pages with matching metadata attributes would be included in the lists
+          with the respective keys.
+
+        KW_Only Args:
+            - `include_missing`: [Default = False] Adds a key `None` to the return dict for 
+            all files either missing the given key, or where any of the key's values equals None
+        """
+
+
 
 
     def attach_component(self, slug: str, subcomponent: Type['Component'], /) -> None:

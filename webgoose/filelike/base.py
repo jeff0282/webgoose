@@ -1,6 +1,8 @@
 import  abc
 import  os
 
+from    typing      import      Any
+
 from    pathvalidate    import      ValidationError
 from    pathvalidate    import      validate_filename
 
@@ -36,3 +38,20 @@ class BaseFile(FileLike):
             raise InvalidPathError(f"Invalid Path: '{filename}' is not a valid filename") from e
         
         return super().validate_slug(slug)
+    
+
+
+class RenderableFile(BaseFile, metaclass=abc.ABCMeta):
+    """
+    Base Class for all Renderable File Classes
+
+    All Renderable File classes should inherit from the class
+    """
+    
+    @abc.abstractmethod
+    def render(self, **render_args: Any) -> str | bytes:
+        """
+        Convert this file object into a string or bytes 
+        to be output to disk
+        """
+        raise NotImplementedError()
