@@ -2,12 +2,14 @@ import  abc
 import  os
 
 from    typing      import      Any
+from    typing      import      Type
 
 from    pathvalidate    import      ValidationError
 from    pathvalidate    import      validate_filename
 
-from    ..filelike        import      FileLike
-from    ..filelike        import      InvalidPathError
+from    ..filelike          import      FileLike
+from    ..filelike          import      InvalidPathError
+from    ..filelike          import      Slug
 
 
 class BaseFile(FileLike):
@@ -19,23 +21,16 @@ class BaseFile(FileLike):
     """
     
 
-    def validate_slug(self, slug: str) -> None:
+    def validate_slug(self, slug: Type[Slug]) -> None:
         """
         """
-
-        # seperate filename for validation
-        filename = os.path.basename(slug)
-
-        # Prevent files from being called the current directory shorthand
-        if filename == os.curdir:
-            raise InvalidPathError(f"Filename cannot be '{os.curdir}'")
 
         # check if filename is well-formed
         try:
-            validate_filename(filename)
+            validate_filename(slug.filename)
         
         except ValidationError as e:
-            raise InvalidPathError(f"Invalid Path: '{filename}' is not a valid filename") from e
+            raise InvalidPathError(f"Invalid Path: '{self.filename}' is not a valid filename") from e
         
         return super().validate_slug(slug)
     
