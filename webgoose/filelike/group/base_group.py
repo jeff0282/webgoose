@@ -32,7 +32,4 @@ class BaseGroup:
         return cmp in self._files
     
 
-    def get(self, search_string)
-    
-
 
