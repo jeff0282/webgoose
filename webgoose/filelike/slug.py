@@ -84,13 +84,13 @@ class Slug:
         return bool(self._slug_tuple)
     
 
-    def __add__(self, to_add: Type['Slug'] | str) -> Type['Slug']:
+    def __add__(self, to_add: Type['Slug'] | str | os.PathLike) -> Type['Slug']:
         """
         Allow conjugation of Slugs using the addition operator
         """
         
         # create a new slug object out of this and the other instance
-        if isinstance(to_add, (Slug, str)):
+        if isinstance(to_add, (Slug, str, os.PathLike)):
             return Slug(self, to_add)
 
         return NotImplemented
@@ -102,7 +102,7 @@ class Slug:
         """
 
         # create new slug object using string
-        if isinstance(to_add, str):
+        if isinstance(to_add, (str, os.PathLike)):
             return Slug(to_add, self)
 
         return NotImplemented
@@ -169,7 +169,7 @@ class Slug:
         if isinstance(key, slice):
             return self.__class__(*(self._slug_tuple[i] for i in range(*key.indices(len(self._slug_tuple)))))
         
-        # if int key requested, get the index from slug tuple
+        # if int key requested, get the index from slug tuple, return as string
         elif isinstance(key, int):
             return self._slug_tuple[key]
         
@@ -193,9 +193,7 @@ class Slug:
 
         # slug may be empty
         if self:
-            # slicing a slug returns another slug
-            # so we must conv to string
-            return str(self[-1])
+            return self[-1]
         
         return ""
     
@@ -244,8 +242,8 @@ class Slug:
 
         i.e.
         ```
-        file_no_exts -> []
-        archive.tar.gz -> ['tar', 'gz']
+        file_no_exts -> ()
+        archive.tar.gz -> ('tar', 'gz')
         ```
         """
         if self.ext:
