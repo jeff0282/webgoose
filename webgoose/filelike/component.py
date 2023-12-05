@@ -52,10 +52,6 @@ class Component(FileLike):
 
     def __bool__(self) -> bool:
         return bool(self.files) and bool(self.subcomponents)
-    
-
-    def __hash__(self) -> int:
-        return hash(self.name)
 
 
     def __contains__(self, cmp: Any) -> bool:

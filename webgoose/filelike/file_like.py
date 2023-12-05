@@ -47,11 +47,7 @@ class FileLike():
 
     def __eq__(self, cmp: Any) -> bool:
         return cmp is self
-    
 
-    def __hash__(self) -> int:
-        return hash(self.slug)
-    
 
     @property
     def indexable(self) -> bool:
