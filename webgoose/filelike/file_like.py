@@ -7,10 +7,10 @@ import  os
 from    typing      import      Any
 from    typing      import      Type
 
-from    ..filelike      import      InvalidURIError
-from    ..filelike      import      NotAnOrphanError
-from    ..filelike      import      NotIndexableError
-from    ..filelike      import      Slug
+from    .           import      InvalidURIError
+from    .           import      NotAnOrphanError
+from    .           import      NotIndexableError
+from    .           import      URI
 
 
 class FileLike():
@@ -99,7 +99,7 @@ class FileLike():
                 raise NotIndexableError(f"Cannot attach as a directory index; '{self}' is not indexable")
         
         # Create the Slug instance to store relative path to parent
-        slug = Slug(slug_str)
+        slug = URI(slug_str)
         self.validate_slug(slug)
 
         # If all good set attachment point
@@ -107,7 +107,7 @@ class FileLike():
 
 
     @property
-    def slug(self) -> Type[Slug] | None:
+    def slug(self) -> Type[URI]:
         """
         This file's URI relative to it's parent as a Slug
         """
@@ -115,7 +115,8 @@ class FileLike():
         if self.attach_point:
             return self.attach_point["slug"]
         
-        return None
+        # return an empty URI if not attached
+        return URI("")
     
 
     @property
@@ -220,7 +221,7 @@ class FileLike():
 
 
     @property
-    def uri(self) -> Type[Slug]:
+    def uri(self) -> Type[URI]:
         """
         Returns the URI of this file as a Slug
 
@@ -231,7 +232,7 @@ class FileLike():
         # we need to add a POSIX seperator to the start
 
         # construct uri from parts slugs, skipping falsey values
-        uri = Slug.ext_sep + Slug(*(part.slug for part in self.parts if part.slug))
+        uri = URI.ext_sep + URI(*(part.slug for part in self.parts if part.slug))
 
         # trim filename if directory index
         if self.is_index:
@@ -241,7 +242,7 @@ class FileLike():
 
 
     @property
-    def rel_uri(self) -> Type[Slug]:
+    def rel_uri(self) -> Type[URI]:
         """
         Return the URI of this file as a string, relative to it's parent
 
@@ -255,11 +256,11 @@ class FileLike():
         return self.slug
 
         
-    def validate_slug(self, slug: Type[Slug]):
+    def validate_slug(self, slug: Type[URI]):
         """
         Validate a file path slug
         """
 
         # if path well formed, check if relative
         if slug.is_absolute:
-            raise InvalidURIError(f"Invalid Path: '{slug}' path given must be relative, not absolute")
+            raise InvalidURIError(f"Invalid Path '{slug}': Path given must be relative, not absolute")

@@ -21,23 +21,23 @@ class NotIndexableError(ValueError):
 # ---
 # Module Imports
 # > Supporting Classes
-from    .slug               import      Slug
+from    .uri                import      URI
 from    .render_context     import      RenderContext
 
 
 # > Base Classes
-#from    .file_like          import      FileLike
-#from    .base               import      BaseFile
-#from    .base               import      RenderableFile
+from    .file_like          import      FileLike
+from    .base               import      BaseFile
+from    .base               import      RenderableFile
 
     
 # > Non-Renderable Built-in Types
-#from    .static_file        import      StaticFile
+from    .static_file        import      StaticFile
 
 # > Directory-Like
-#from    .component          import      Component
+from    .component          import      Component
 
 # > Renderable Built-in Types
-#from    .plain_file         import      PlainFile
-#from    .templated          import      Templated
-#from    .page               import      Page
+from    .plain_file         import      PlainFile
+from    .templated          import      Templated
+from    .page               import      Page

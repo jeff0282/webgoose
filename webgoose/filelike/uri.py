@@ -9,10 +9,10 @@ from    pathlib         import      PurePosixPath
 from    pathvalidate    import      ValidationError
 from    pathvalidate    import      validate_filepath
 
-from    ..filelike      import      InvalidURIError
+from    .               import      InvalidURIError
 
 
-class Slug:
+class URI:
     """
     A tuple-like implementation of URIs
     """
@@ -29,7 +29,7 @@ class Slug:
     _slug_tuple: tuple[str, ...]
 
 
-    def __init__(self, *slug_parts: str | os.PathLike | Type['Slug']):
+    def __init__(self, *slug_parts: str | os.PathLike | Type['URI']):
         """
         Create a slug instance with one or more string or PathLike objects
 
@@ -51,7 +51,7 @@ class Slug:
         # Ensure that no parts of the path contain parent dir refs
         parts = PurePosixPath(str_posix_path).parts
         if any(part for part in parts if part == os.pardir):
-            raise InvalidURIError(f"Slug must not contain any parent directory references")
+            raise InvalidURIError(f"Path must not contain any parent directory references")
         
         # if all good, set parts
         self._slug_tuple = parts
@@ -84,26 +84,26 @@ class Slug:
         return bool(self._slug_tuple)
     
 
-    def __add__(self, to_add: Type['Slug'] | str | os.PathLike) -> Type['Slug']:
+    def __add__(self, to_add: Type['URI'] | str | os.PathLike) -> Type['URI']:
         """
         Allow conjugation of Slugs using the addition operator
         """
         
         # create a new slug object out of this and the other instance
-        if isinstance(to_add, (Slug, str, os.PathLike)):
-            return Slug(self, to_add)
+        if isinstance(to_add, (URI, str, os.PathLike)):
+            return self.__class__(self, to_add)
 
         return NotImplemented
     
 
-    def __radd__(self, to_add: str) -> Type['Slug']:
+    def __radd__(self, to_add: str) -> Type['URI']:
         """
         Allow reverse conjugation of strings to Slug instances using addition operator
         """
 
         # create new slug object using string
         if isinstance(to_add, (str, os.PathLike)):
-            return Slug(to_add, self)
+            return self.__class__(to_add, self)
 
         return NotImplemented
     
@@ -130,7 +130,7 @@ class Slug:
         return hash(self._slug_tuple)
     
 
-    def __eq__(self, cmp: str | Type['Slug']) -> bool:
+    def __eq__(self, cmp: str | Type['URI']) -> bool:
         """
         Allow equality checks using strings or slug instances
         """
@@ -144,7 +144,7 @@ class Slug:
                 return False
 
         # if cmp is already a slug instance, do a straight hash comparison
-        elif isinstance(cmp, Slug):
+        elif isinstance(cmp, URI):
             return hash(self) == hash(cmp)
         
         # if no matches type match above, then not equal
@@ -160,7 +160,7 @@ class Slug:
             yield part
 
 
-    def __getitem__(self, key: int | slice) -> str | Type['Slug']:
+    def __getitem__(self, key: int | slice) -> str | Type['URI']:
         """
         Implement slug access by index and slicing
         """
@@ -196,6 +196,16 @@ class Slug:
             return self[-1]
         
         return ""
+    
+
+    @property
+    def dirname(self) -> Type['URI']:
+        """
+        Return this URI one level up as a new URI instance
+        """
+
+        # slicing returns a new URI instance
+        return self[:-1]
     
 
     @property
