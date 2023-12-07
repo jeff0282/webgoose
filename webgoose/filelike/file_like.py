@@ -50,10 +50,11 @@ class FileLike():
 
 
     @property
-    def indexable(self) -> bool:
+    def is_indexable(self) -> bool:
         """
         Returns True if this file can be used as a Directory Index
         """
+
         return hasattr(self, "index_filename")
     
 
@@ -62,10 +63,20 @@ class FileLike():
         """
         Returns True if this file is attached and is a Directory Index
         """
+
         if self.attach_point:
             return self.attach_point['is_index']
         
         return False
+    
+
+    @property
+    def is_attached(self) -> bool:
+        """
+        Returns True if this file has it's attachment point set, false otherwise
+        """
+
+        return bool(self.attach_point)
     
 
     @property
@@ -76,6 +87,7 @@ class FileLike():
 
         If not attached, returns None
         """
+
         return self._attach_point
     
 
@@ -137,10 +149,7 @@ class FileLike():
         Returns the filename of a file
         """
 
-        if self.slug:
-            return self.slug.filename
-        
-        return ""
+        return self.slug.filename
 
 
     @property
@@ -152,10 +161,7 @@ class FileLike():
         /this/is/a/file.txt -> 'file'
         """
 
-        if self.slug:
-            return self.slug.basename
-        
-        return ""
+        return self.slug.basename
     
 
     @property
@@ -169,10 +175,7 @@ class FileLike():
         archive.tar.gz -> '.tar.gz'
         """
 
-        if self.slug:
-            return self.slug.ext
-        
-        return ""
+        return self.slug.ext
 
 
     @property
@@ -184,10 +187,7 @@ class FileLike():
         archive.tar.gz -> ['tar', 'gz']
         """
 
-        if self.slug:
-            return self.slug.exts
-        
-        return tuple()
+        return self.slug.exts
 
 
     @property

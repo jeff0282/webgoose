@@ -36,7 +36,11 @@ class URI:
         Strings and PathLike objects can be mixed provided they create a valid URI
 
         If multiple absolute paths provided, uses the last one.
-        """
+        """ 
+
+        #
+        # I HATE THIS IT'S FUCKING TOO SLOW TRAVIS WHAT THE FUCK
+        #
 
         # Validate Posix Path, Ensure all slug_parts are strings
         # (Create windows path and convert to posix to ensure any invalid drive letters, etc are picked up)

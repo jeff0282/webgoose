@@ -3,9 +3,12 @@ from    typing      import      Any
 from    typing      import      Iterable
 from    typing      import      Type
 
+from    collections     import      deque
 from    dataclasses     import      dataclass
+from    wcmatch         import      glob
 
 from    .               import      FileLike
+from    .               import      NotIndexableError
 from    .               import      URI
 
 
@@ -71,6 +74,11 @@ class FileList:
 
 
     # ---
+    # Class Attrs
+    GLOB_REC_STR   = "**"
+
+
+    # ---
     # Instance Attr Typing
     _tree: Type[DirNode]
 
@@ -80,7 +88,7 @@ class FileList:
         Create an empty FileGroup instance
         """
         
-        self._tree = self.DirNode()
+        self._tree = self.DirNode("")
 
 
     def __bool__(self) -> bool:
@@ -110,8 +118,6 @@ class FileList:
 
         #
         # Try to get file, perform object match if necessary.
-        # If anything other than TypeError or FileNotFoundError are raised,
-        # something is very fuckied up :( 
         try:
             file = self.get(search_path)
             if instance_match:
@@ -127,95 +133,213 @@ class FileList:
             return False
         
 
+    def add(self, file_to_add: Type[FileLike], as_index: bool = False) -> None:
+        """
+        Add a File to this File List
+
+        Raises:
+        - FileExistsError: if path given is already in-use or conflicts with another file
+        - NotIndexableError: if as_index is True and the given file is not indexable
+        """
+
+        # attempt to create path for file
+        dir = self._make_path(file_to_add.slug.dirname)
+
+        # if adding as an index, check:
+        # - if the file can be indexed
+        # - if directory already has an index
+        if as_index:
+            if not file_to_add.is_indexable():
+                raise NotIndexableError(f"Cannot Add Directory Index: File '{file_to_add}' does not support being used as a Directory Index")
+            
+            if dir.index:
+                raise FileExistsError(f"Cannot Add Directory Index: Directory Index already registered for '{file_to_add.slug.dirname}'")
+            
+            # if no errors raised, we can set the index
+            dir.index = file_to_add
+
+        # finally, add this file to the dir's files
+        dir.files.append(file_to_add)
+        
+
     def get(self, path: str | Type[URI]) -> Type[FileLike]:
         """
         Get a item from this FileList with a given Path (string or URI instance)
 
         Paths are searched relative to the root; absolute path searches will turn up empty
+
+        Raises:
+        - FileNotFoundError: if path given doesn't exist in this File List
         """
 
         # convert path to URI instance if not already
         if isinstance(path, str):
             path = URI(path)
 
-        search_uri = path
-        current_node = self._tree
-        while search_uri:
+        search_path: Type[URI] = path
+        current_dir: Type[FileList.DirNode] = self._tree
+        while current_dir:
 
-            # if on last part of search URI, search files
-            if len(search_uri) == 0:
-                file = current_node.get_file(search_uri[0], None)
-                if file:
-                    return file
-                # if no match, break
-                break
+            # try to get next dir
+            # if we're on the last path part, either file or dir index
+            next_dir = current_dir.get_dir(search_path[0], None)
+            if len(search_path) == 1:
                 
-            # otherwise, attempt to match next subdir
-            else:
-                dir = current_node.get_dir(search_uri[0], None)
-                # if match, set current node and trim search_uri for next iteration
-                if dir:
-                    current_node = dir
-                    search_uri = search_uri[1:]
-                    continue
-                # if no match, break
-                break
+                # if we matched a dir on the last path part, attempt to get index
+                if next_dir:
+                    if next_dir.index:
+                        return next_dir.index    
+
+                # if dir wasn't matched, attempt to get a file
+                else:
+                    file = current_dir.get_file(search_path[0])
+                    if file:
+                        return file
+                    
+            # trim search path, and set current dir
+            search_path = search_path[1:]
+
+            # if next_dir == None here, the path doesn't exist
+            current_dir = next_dir
+
 
         # if we reach here, part of the search URI hasn't matched
         raise FileNotFoundError(f"The file '{path}' is not present in this FileList")
 
 
-    def add(self, file_to_add: Type[FileLike], as_index: bool = False) -> None:
+    def glob(self, glob_exp: str) -> Type['FileList']:
         """
-        Add a File to this File List
+        Create a subset of this FileList using a Glob Expression
         """
 
-        # attempt to create path for file
-        dir = self._make_path(file_to_add.slug.dirname)
+        index_only = glob_exp.endswith(URI.path_sep)
+        glob_exp = URI(glob_exp)
 
-        # if adding as an index, check if index already set for respective dir
-        if as_index:
-            if dir.index:
-                raise FileExistsError(f"Cannot Add Directory Index: Directory Index already registered for '{file_to_add.slug.dirname}'")
-            # if index not set for the dir, set this file to be it
-            dir.index = file_to_add
+        dirs = [self._tree]
+        matches = FileList()
+        while glob_exp:
+            dirs, files = self._glob_dispatch(glob_exp, dirs, index_only=index_only)
+            glob_exp = glob_exp[1:]
+            matches.add(files)
 
-        # finally, add this file to the dir's files
-        dir.files.append(file_to_add)
+        return matches
+
+    
+    def _glob_dispatch(self, 
+                       glob_exp: Type[URI], 
+                       dirs: Iterable[Type[DirNode]],
+                       *,
+                       index_only: bool = False
+                       ) -> tuple[list[Type[DirNode]], list[Type[FileLike]]]:
+        """
+        Dispatches glob expression operations on dirs provided depending
+        on first item on glob expression
+        """
+
+        if glob_exp[0] == self.GLOB_REC_STR:
+            dirs, files = self._rglob(glob_exp[1:], dirs, index_only=index_only)
+        
+        else:
+            dirs, files = self._stdglob(glob_exp, dirs, index_only=index_only)
+
+        return dirs, files
+    
+
+    def _rglob(self, 
+               glob_exp: Type[URI], 
+               dirs: Iterable[Type[DirNode]],
+               *,
+               index_only: bool = False
+               ) -> tuple[list[Type[DirNode]], list[Type[FileLike]]]:
+        """
+        Apply _glob_dispatch to every dir provided recursively
+        """
+
+        dirs = []
+        files = []
+        queue = deque(dirs)
+        while queue:
+            curdir = queue.pop()
+            queue.extendleft(curdir.subdirs)
+            new_dirs, new_files = self._glob_dispatch(glob_exp, [curdir], index_only=index_only)
+            dirs.extend(new_dirs)
+            files.extend(new_files)
+
+        return dirs, files
+
+
+    def _stdglob(self, 
+                 glob_exp: Type[URI], 
+                 dirs: Iterable[Type[DirNode]],
+                 *,
+                 index_only: bool = False
+                 ) -> tuple[list[Type[DirNode]], list[Type[FileLike]]]:
+        """
+        Match the files and subdirs by name using a glob expression
+        """
+
+        dirs = []
+        files = []
+        # if glob expression is empty, so should the results
+        if len(glob_exp) < 1:
+            return dirs, files
+        
+        # if we're on the last part of the glob expression, look for only files or indexes
+        if len(glob_exp) == 1:
+            # if looking for indexes, get the index of every subdir of dirs provided
+            # the subdir's name matches glob expression (and the index exists, ofcourse)
+            if index_only:
+                for dir in dirs:
+                    files.extend(subdir.index for subdir in dir.subdirs if glob.globmatch(subdir.name, glob_exp[0]))
+
+            # otherwise, grab every file from dirs provided if it matches the glob expression
+            else:
+                for dir in dirs:
+                    files.extend(file for file in dir.files if glob.globmatch(file.filename, glob_exp[0]))
+        
+        # otherwise, we're matching subdirs
+        else:
+            for dir in dirs:
+                dirs.extend(subdir for subdir in dir.subdirs if glob.globmatch(subdir.name, glob_exp[0]))
+
+        # return what we've found
+        return dirs, files
+
 
 
     def _make_path(self, path: Type[URI]) -> Type[DirNode]:
         """
         Ensure that the path provided in slug exists
 
-        Raises FileExistsError if any of the parts of the directory path
-        conflict with an existing filename
+        Raises:
+        - FileExistsError: if any of the parts of the directory path conflict with an existing filename
         """
 
-        # construct directory path given
-        current_node = self._tree
+        # create and store directory nodes to be made
+        # so we can pre-emptively find conflicts
+        path_built:     list[str]   = []
+        dirs_to_build:  list[tuple[Type[FileList.DirNode], Type[FileList.DirNode]]] = []
+        current_dir:    Type[FileList.DirNode] = self._tree
         while path:
 
-            # if next directory already exists, use it, trim path and skip to next iter
-            match_dir = current_node.get_dir(path[0], None)
-            if match_dir:
-                current_node = match_dir
-                path = path[1:]
-                continue
+            # if current path part conflicts with a filename in current directory, cannot proceed
+            if current_dir.get_file(path[0], None):
+                raise FileExistsError(f"Cannot Construct Path: Path interferes with existing file list entry '{str(URI(*path_built, path[0]))}'")
             
-            # otherwise, create new directory node
-            # confirm that making new directory node won't interfere with existing filenames
-            match_file = current_node.get_file(path[0], None)
-            if match_file:
-                raise FileExistsError(f"Cannot Construct Path: Path interferes with existing file list entry '{match_file}'")
+            # if no conflict, if current directory has a subdir with current path part, use it, otherwise create one
+            new_dir = current_dir.get_dir(path[0], None)
+            if not dir:
+                new_dir = FileList.DirNode(path[0])
+                dirs_to_build.append((current_dir, new_dir))
             
-            # create and add new directory node, set new current node and trim path for next iter
-            new_dirnode = FileList.DirNode(path[0])
-            current_node.subdirs.append(new_dirnode)
-            current_node = new_dirnode
+            # update path_built and current_dir, trim path, and proceed to next iter
+            current_dir = new_dir
+            path_built.append(path[0])
             path = path[1:]
 
-        # if no errors raised, current_node should now be the last directory in the path
-        return current_node
+        # if no errors, we can build the path from what we've found
+        for par_dir, new_dir in dirs_to_build:
+            par_dir.subdirs.append(new_dir)
 
-
+        # current node will be equal to last node built
+        return current_dir
