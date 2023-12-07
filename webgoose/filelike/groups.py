@@ -5,6 +5,7 @@ from    typing      import      Type
 
 from    collections     import      deque
 from    dataclasses     import      dataclass
+from    dataclasses     import      field
 from    wcmatch         import      glob
 
 from    .               import      FileLike
@@ -27,8 +28,8 @@ class FileList:
         """
 
         name:       str
-        files:      list[Type[FileLike]]            = []
-        subdirs:    list[Type['FileList.DirNode']]  = []
+        files:      list[Type[FileLike]]            = field(default_factory=lambda: [])
+        subdirs:    list[Type['FileList.DirNode']]  = field(default_factory=lambda: [])
         index:      Type[FileLike] | None           = None
 
 
@@ -38,13 +39,6 @@ class FileList:
             """
 
             return cmp in self.files or cmp in self.subdirs
-    
-
-        def __bool__(self) -> bool:
-            """
-            A DirNode should be truthy if it has children
-            """
-            return bool(self.files) and bool(self.subdirs)
         
 
         def get_file(self, name: str, _default: Any = None) -> Type[FileLike] | Any:
@@ -113,13 +107,13 @@ class FileList:
 
         # get URI instance from provided data
         if isinstance(cmp, FileLike):
-            search_path = cmp.slug
+            cmp = cmp.slug
             instance_match = True
 
         #
         # Try to get file, perform object match if necessary.
         try:
-            file = self.get(search_path)
+            file = self.get(cmp)
             if instance_match:
                 return file is cmp
             return bool(file)
@@ -141,6 +135,9 @@ class FileList:
         - FileExistsError: if path given is already in-use or conflicts with another file
         - NotIndexableError: if as_index is True and the given file is not indexable
         """
+
+        if file_to_add.slug in self:
+            raise FileExistsError(f"Cannot Add File: '{file_to_add.slug}' already exists")
 
         # attempt to create path for file
         dir = self._make_path(file_to_add.slug.dirname)
@@ -180,27 +177,25 @@ class FileList:
         current_dir: Type[FileList.DirNode] = self._tree
         while current_dir:
 
-            # try to get next dir
-            # if we're on the last path part, either file or dir index
-            next_dir = current_dir.get_dir(search_path[0], None)
-            if len(search_path) == 1:
+            # if we haven't matched anything on search path is empty
+            # try to get an index of the current_dir
+            if len(search_path) == 0:
+                if current_dir.index:
+                    return current_dir.index
                 
-                # if we matched a dir on the last path part, attempt to get index
-                if next_dir:
-                    if next_dir.index:
-                        return next_dir.index    
+                # if no match, break as this is the last check
+                break
 
-                # if dir wasn't matched, attempt to get a file
-                else:
-                    file = current_dir.get_file(search_path[0])
-                    if file:
-                        return file
-                    
-            # trim search path, and set current dir
+            # if we're on the last path part, try to get a file
+            # if none match, we'll check for index in next iter
+            elif len(search_path) == 1:
+                file = current_dir.get_file(search_path[0], None)
+                if file:
+                    return file
+            
+            # set next dir and trim search path for next iter
+            current_dir = current_dir.get_dir(search_path[0], None)
             search_path = search_path[1:]
-
-            # if next_dir == None here, the path doesn't exist
-            current_dir = next_dir
 
 
         # if we reach here, part of the search URI hasn't matched
@@ -212,98 +207,99 @@ class FileList:
         Create a subset of this FileList using a Glob Expression
         """
 
+        # if glob expression ends with slash, look only for directory indexes
         index_only = glob_exp.endswith(URI.path_sep)
+
+        # convert glob expression to URI instance
         glob_exp = URI(glob_exp)
+        fl = self.__class__()
+        for item in self._glob(glob_exp, [self._tree], index_only=index_only):
+            fl.add(item)
 
-        dirs = [self._tree]
-        matches = FileList()
-        while glob_exp:
-            dirs, files = self._glob_dispatch(glob_exp, dirs, index_only=index_only)
-            glob_exp = glob_exp[1:]
-            matches.add(files)
-
-        return matches
+        return fl
 
     
-    def _glob_dispatch(self, 
-                       glob_exp: Type[URI], 
-                       dirs: Iterable[Type[DirNode]],
-                       *,
-                       index_only: bool = False
-                       ) -> tuple[list[Type[DirNode]], list[Type[FileLike]]]:
+    def _glob(self, 
+              glob_exp: Type[URI], 
+              part_matches: Iterable[Type[DirNode]],
+              *,
+              index_only: bool = False
+              ) -> list[Type[DirNode] | Type[FileLike]]:
         """
+        Internal method for self.glob
+
         Dispatches glob expression operations on dirs provided depending
         on first item on glob expression
         """
 
-        if glob_exp[0] == self.GLOB_REC_STR:
-            dirs, files = self._rglob(glob_exp[1:], dirs, index_only=index_only)
+        while glob_exp:
+            if glob_exp[0] == self.GLOB_REC_STR:
+                return self._rglob(glob_exp[1:], part_matches, index_only=index_only)
         
-        else:
-            dirs, files = self._stdglob(glob_exp, dirs, index_only=index_only)
+            part_matches = self._stdglob(glob_exp, part_matches, index_only=index_only)
+            glob_exp = glob_exp[1:]
+        
+        return part_matches
 
-        return dirs, files
     
-
     def _rglob(self, 
                glob_exp: Type[URI], 
-               dirs: Iterable[Type[DirNode]],
+               part_matches: Iterable[Type[DirNode]],
                *,
                index_only: bool = False
-               ) -> tuple[list[Type[DirNode]], list[Type[FileLike]]]:
+               ) -> list[Type[DirNode] | Type[FileLike]]:
         """
         Apply _glob_dispatch to every dir provided recursively
         """
 
-        dirs = []
-        files = []
-        queue = deque(dirs)
+        matches = []
+        queue = deque(part_matches)
         while queue:
             curdir = queue.pop()
             queue.extendleft(curdir.subdirs)
-            new_dirs, new_files = self._glob_dispatch(glob_exp, [curdir], index_only=index_only)
-            dirs.extend(new_dirs)
-            files.extend(new_files)
+            matches.extend(self._glob(glob_exp, [curdir], index_only=index_only))
 
-        return dirs, files
+        return matches
 
 
     def _stdglob(self, 
                  glob_exp: Type[URI], 
-                 dirs: Iterable[Type[DirNode]],
+                 part_matches: Iterable[Type[DirNode]],
                  *,
                  index_only: bool = False
-                 ) -> tuple[list[Type[DirNode]], list[Type[FileLike]]]:
+                 ) -> list[Type[DirNode] | Type[FileLike]]:
         """
         Match the files and subdirs by name using a glob expression
+
+        Only handles single directories, does not touch their subdirs
         """
 
-        dirs = []
-        files = []
+        matches = []
+
         # if glob expression is empty, so should the results
         if len(glob_exp) < 1:
-            return dirs, files
+            return matches
         
         # if we're on the last part of the glob expression, look for only files or indexes
-        if len(glob_exp) == 1:
+        elif len(glob_exp) == 1:
             # if looking for indexes, get the index of every subdir of dirs provided
             # the subdir's name matches glob expression (and the index exists, ofcourse)
             if index_only:
-                for dir in dirs:
-                    files.extend(subdir.index for subdir in dir.subdirs if glob.globmatch(subdir.name, glob_exp[0]))
+                for dir in part_matches:
+                    matches.extend(subdir.index for subdir in dir.subdirs if glob.globmatch(subdir.name, glob_exp[0]))
 
             # otherwise, grab every file from dirs provided if it matches the glob expression
             else:
-                for dir in dirs:
-                    files.extend(file for file in dir.files if glob.globmatch(file.filename, glob_exp[0]))
+                for dir in part_matches:
+                    matches.extend(file for file in dir.files if glob.globmatch(file.filename, glob_exp[0]))
         
         # otherwise, we're matching subdirs
+        # return every subdir that matches the current glob expression part
         else:
-            for dir in dirs:
-                dirs.extend(subdir for subdir in dir.subdirs if glob.globmatch(subdir.name, glob_exp[0]))
+            for dir in part_matches:
+                matches.extend(subdir for subdir in dir.subdirs if glob.globmatch(subdir.name, glob_exp[0]))
 
-        # return what we've found
-        return dirs, files
+        return matches
 
 
 
@@ -320,7 +316,7 @@ class FileList:
         path_built:     list[str]   = []
         dirs_to_build:  list[tuple[Type[FileList.DirNode], Type[FileList.DirNode]]] = []
         current_dir:    Type[FileList.DirNode] = self._tree
-        while path:
+        while current_dir and path:
 
             # if current path part conflicts with a filename in current directory, cannot proceed
             if current_dir.get_file(path[0], None):
@@ -328,7 +324,7 @@ class FileList:
             
             # if no conflict, if current directory has a subdir with current path part, use it, otherwise create one
             new_dir = current_dir.get_dir(path[0], None)
-            if not dir:
+            if not new_dir:
                 new_dir = FileList.DirNode(path[0])
                 dirs_to_build.append((current_dir, new_dir))
             

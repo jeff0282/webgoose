@@ -186,7 +186,12 @@ class URI:
         """
         True if path is absolute, false otherwise
         """
-        return self[0] == self.path_sep
+
+        # slug may be empty
+        if self:
+            return self[0] == self.path_sep
+
+        return False
         
     
     @property

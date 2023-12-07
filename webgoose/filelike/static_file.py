@@ -3,8 +3,10 @@ import  os
 
 from    pathlib     import      Path
 
+from    .           import      BaseFile
 
-class StaticFile:
+
+class StaticFile(BaseFile):
     """
     Abstract Class for Static Files
 

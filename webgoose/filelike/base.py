@@ -1,5 +1,5 @@
+
 import  abc
-import  os
 
 from    typing      import      Any
 from    typing      import      Type
@@ -7,9 +7,9 @@ from    typing      import      Type
 from    pathvalidate    import      ValidationError
 from    pathvalidate    import      validate_filename
 
-from    ..filelike          import      FileLike
-from    ..filelike          import      InvalidPathError
-from    ..filelike          import      Slug
+from    .               import      FileLike
+from    .               import      InvalidURIError
+from    .               import      URI
 
 
 class BaseFile(FileLike):
@@ -21,7 +21,7 @@ class BaseFile(FileLike):
     """
     
 
-    def validate_slug(self, slug: Type[Slug]) -> None:
+    def validate_slug(self, slug: Type[URI]) -> None:
         """
         """
 
@@ -30,7 +30,7 @@ class BaseFile(FileLike):
             validate_filename(slug.filename)
         
         except ValidationError as e:
-            raise InvalidPathError(f"Invalid Path: '{self.filename}' is not a valid filename") from e
+            raise InvalidURIError(f"Invalid Path: '{self.filename}' is not a valid filename") from e
         
         return super().validate_slug(slug)
     

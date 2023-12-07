@@ -22,7 +22,6 @@ class NotIndexableError(ValueError):
 # Module Imports
 # > Supporting Classes
 from    .uri                import      URI
-from    .render_context     import      RenderContext
 
 
 # > Base Classes
@@ -36,6 +35,7 @@ from    .static_file        import      StaticFile
 
 # > Directory-Like
 from    .component          import      Component
+from    .groups             import      FileList
 
 # > Renderable Built-in Types
 from    .plain_file         import      PlainFile
