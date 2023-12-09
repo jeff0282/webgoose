@@ -27,10 +27,10 @@ class BaseFile(FileLike):
 
         # check if filename is well-formed
         try:
-            validate_filename(slug.filename)
+            validate_filename(slug.basename)
         
         except ValidationError as e:
-            raise InvalidURIError(f"Invalid Path: '{self.filename}' is not a valid filename") from e
+            raise InvalidURIError(f"Invalid Path: '{self.basename}' is not a valid filename") from e
         
         return super().validate_slug(slug)
     

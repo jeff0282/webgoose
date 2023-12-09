@@ -195,9 +195,9 @@ class URI:
         
     
     @property
-    def filename(self) -> str:
+    def basename(self) -> str:
         """
-        This slug's filename as a string
+        This last component of the URI
         """
 
         # slug may be empty
@@ -218,17 +218,17 @@ class URI:
     
 
     @property
-    def basename(self) -> str:
+    def stem(self) -> str:
         """
-        This slug's basename as a string (the filename stripped of extensions)
+        This slug's basename stripped of extensions
         """
 
         try:
-            i = self.filename.index(os.extsep, 1)
-            return self.filename[:i]
+            i = self.basename.index(os.extsep, 1)
+            return self.basename[:i]
         
         except ValueError:
-            return self.filename
+            return self.basename
 
 
     @property
@@ -246,8 +246,8 @@ class URI:
         """
 
         try:
-            i = self.filename.index(self.ext_sep, 1)
-            return self.filename[i:]
+            i = self.basename.index(self.ext_sep, 1)
+            return self.basename[i:]
 
         except:
             return ""

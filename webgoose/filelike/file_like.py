@@ -93,7 +93,7 @@ class FileLike():
 
     def set_attach_point(self, 
                          *, 
-                         slug_str: str, 
+                         slug: str, 
                          parent: Type['FileLike'], 
                          is_index: bool = False
                          ) -> None:
@@ -107,21 +107,46 @@ class FileLike():
         
         # if attempting to set as directory index, ensure that's possible
         if is_index:
-            if not self.indexable:
+            if not self.is_indexable:
                 raise NotIndexableError(f"Cannot attach as a directory index; '{self}' is not indexable")
         
-        # Create the Slug instance to store relative path to parent
-        slug = URI(slug_str)
+        # Create the URI instance to store relative path to parent
+        slug = URI(slug)
         self.validate_slug(slug)
 
-        # If all good set attachment point
-        self._attach_point = dict(slug=slug, parent=parent, is_index=is_index)
+        # If all good, attempt to add to parent
+        if not hasattr(parent, "_add"):
+            raise ValueError(f"Parent '{parent}' cannot take children: Parents must define method Parent._add")
+
+        try:
+            self._attach_point = dict(slug=slug, parent=parent, is_index=is_index)
+            parent._add(self, is_index)
+        
+        except Exception as e:
+            # if any exception raised, reset attach_point
+            self._attach_point = None
+            raise e
 
 
     @property
     def slug(self) -> Type[URI]:
         """
-        This file's URI relative to it's parent as a Slug
+        This file's URI relative to it's parent as a URI instance
+
+        Abbreviates filenames for Directory Indexes
+        """
+
+        if self.is_index:
+            return self.full_slug.dirname
+        
+        return self.full_slug
+    
+
+    @property
+    def full_slug(self) -> Type[URI]:
+        """
+        Return the full, unabbreviated URI of this file as a URI instance, 
+        relative to it's parent
         """
 
         if self.attach_point:
@@ -144,24 +169,24 @@ class FileLike():
 
 
     @property
-    def filename(self) -> str:
-        """
-        Returns the filename of a file
-        """
-
-        return self.slug.filename
-
-
-    @property
     def basename(self) -> str:
         """
         Returns the basename of this file
+        """
+
+        return self.slug.basename
+
+
+    @property
+    def stem(self) -> str:
+        """
+        Returns the basename stripped of extensions
 
         file.txt -> 'file'
         /this/is/a/file.txt -> 'file'
         """
 
-        return self.slug.basename
+        return self.slug.stem
     
 
     @property
@@ -232,28 +257,13 @@ class FileLike():
         # we need to add a POSIX seperator to the start
 
         # construct uri from parts slugs, skipping falsey values
-        uri = URI.ext_sep + URI(*(part.slug for part in self.parts if part.slug))
+        uri = URI(*(part.slug for part in self.parts if part.slug))
 
         # trim filename if directory index
         if self.is_index:
             uri = uri.dirname
 
-        return uri
-
-
-    @property
-    def rel_uri(self) -> Type[URI]:
-        """
-        Return the URI of this file as a string, relative to it's parent
-
-        Abbreviates filenames for Directory Indexes
-        """
-
-        # if directory index, return dirname, otherwise return slug
-        if self.is_index:
-            return self.slug.dirname
-        
-        return self.slug
+        return URI.path_sep + uri
 
         
     def validate_slug(self, slug: Type[URI]):
