@@ -23,7 +23,6 @@ class NotIndexableError(ValueError):
 # > Supporting Classes
 from    .uri                import      URI
 
-
 # > Base Classes
 from    .file_like          import      FileLike
 from    .base               import      BaseFile
@@ -35,7 +34,7 @@ from    .static_file        import      StaticFile
 
 # > Directory-Like
 from    .component          import      Component
-from    .groups             import      FileList
+from    .file_group         import      FileGroup
 
 # > Renderable Built-in Types
 from    .plain_file         import      PlainFile
