@@ -71,5 +71,6 @@ if __file__ == __main__:
 
 Webgoose has been heavily inspired by a variety of projects and websites:
 
+- ['Astro'](https://astro.build) and ['Nyabla.net V2'](https://https://github.com/nyabla/nyabla.net-v2) - An incredibly extensible site generation framework, and an older version of ['Nela's'](https://nyabla.net) personal website made using it.
 - ['Lightweight'](https://github.com/mdrachuk/lightweight) - A Nice & Simple Static-Site Generator Framework; Inspiration for quite a lot of the Webgoose API.
 - ['Kagami'](https://github.com/microsounds/kagami) and ['microsounds.github.io'](https://microsounds.github.io) - A 'Web-1.0 Static Microblog Processor' written in Shell, and the author's website built with it. I cannot tell you how much I love these two projects..!!
