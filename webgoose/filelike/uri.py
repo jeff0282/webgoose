@@ -340,30 +340,27 @@ class URI:
                 first_iter = False
 
                 # if last item in input iterable is just a path seperator:
-                # > treat as a directory indicator, not an absolute path, and skip
-                # > ( unless it's the only path_part, is which case set absolute )
+                # > treat as solely a directory indicator, unless it's the only item in the input
                 if path_part in self.input_seps:
                     is_dir = True
-                    if len(_iterable) <= 1:
+                    # if this is the only part, it is both dir and abs
+                    if len(_iterable) == 1:
                         is_abs = True
-                        break
-                    continue # (NOTE: skipping is vital to avoid is_abs check in this case)
 
                 # otherwise, check if path_parts ends with trailing slash
                 elif path_part.endswith(self.input_seps):
                     is_dir = True
 
-            # check if current part is absolute
-            if path_part.startswith(self.input_seps):
-                is_abs = True
+            # otherwise, add part and check if it's absolute
+            else:
+                # add individual path part segments to parts
+                # i.e. PathPart '/path/to/file.txt' -> Segments '(path, to, file.txt)'
+                parts.extend(segment for segment in reversed(re.split(split_pattern, path_part)) if segment)
 
-            # add individual path part segments to parts
-            # i.e. PathPart '/path/to/file.txt' -> Segments '(path, to, file.txt)'
-            parts.extend(segment for segment in reversed(re.split(split_pattern, path_part)) if segment)
-
-            # if path is absolute, we take it as the start of the URI and discard the rest
-            if is_abs:
-                break
+                # if path part is absolute, we take it as the start of the URI and discard the rest
+                if path_part.startswith(self.input_seps):
+                    is_abs = True
+                    break
 
         return tuple(reversed(parts)), is_abs, is_dir
 
