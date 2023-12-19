@@ -8,7 +8,7 @@ from    typing      import      Type
 
 from    jinja2      import      Template
 
-from    ..filelike    import      Templated
+from    .           import      Templated
 
 
 class Page(Templated):
@@ -33,24 +33,13 @@ class Page(Templated):
         """
 
         # Set defaults for content and template 
-        content = content if content else ""
+        self.content = content if content else ""
         template = template if template else self.get_template_from_string(self.DEFAULT_TEMPLATE_STR)
         
         # set instance vars (cheers super)
         super().__init__(content=content, template=template, **render_args)
         self.metadata = meta if meta else dict()
 
-        # put a copy of content under plain_content
-        # content will be coverted to markup when `render()` is called
-        self.context.add_fixed(plain_content=content)
-
-    
-    @property
-    def plain_content(self) -> str:
-        """
-        The plain text version of this Page's content
-        """
-        return self.context['plain_content']
 
 
     @classmethod

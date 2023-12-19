@@ -11,7 +11,8 @@ import  pytest
 from    pytest_cases        import      parametrize_with_cases
 
 from    webgoose.filelike   import      FileLike
-from    webgoose.filelike   import      InvalidPathError
+from    webgoose.filelike   import      InvalidURIError
+from    webgoose.filelike   import      URI
 
 
 @pytest.fixture
@@ -47,13 +48,13 @@ class SlugValidationCases:
 #
 @parametrize_with_cases("slug", cases=SlugValidationCases, prefix="pass_")
 def test_pass_slug_validation(slug):
-    FileLike().validate_slug(slug)
+    FileLike().validate_slug(URI(slug))
 
 
 @parametrize_with_cases("slug", cases=SlugValidationCases, prefix="fail_")
 def test_fail_slug_validation(slug):
-    with pytest.raises(InvalidPathError):
-        FileLike().validate_slug(slug)
+    with pytest.raises(InvalidURIError):
+        FileLike().validate_slug(URI(slug))
 
 
 # ---
@@ -86,7 +87,7 @@ def test_lone_basename(lone_filelike: FileLike):
 def test_lone_parts(lone_filelike: FileLike):
     assert lone_filelike.parts == (lone_filelike,)
 
-def test_lone_path(lone_filelike: FileLike):
-    assert lone_filelike.path == ""
+def test_lone_uri(lone_filelike: FileLike):
+    assert lone_filelike.uri == "/"
 
 

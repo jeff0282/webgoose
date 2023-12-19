@@ -9,7 +9,7 @@ from    jinja2      import      FileSystemLoader
 from    jinja2      import      Template
 from    pathlib     import      Path
 
-from    ..filelike    import      PlainFile
+from    .           import      PlainFile
 
 
 class Templated(PlainFile):
@@ -31,7 +31,6 @@ class Templated(PlainFile):
                  template: Template,
                  *, 
                  content: str,
-                 **render_args: Any
                  ) -> None:
         """
         Create a Templated File object
@@ -45,7 +44,6 @@ class Templated(PlainFile):
         
         super().__init__(content=content)
         self.template = template
-        self.context.add(**render_args)
 
 
     @classmethod
@@ -117,6 +115,6 @@ class Templated(PlainFile):
         self.context.add(**external_render_args)
 
         # render the stuff
-        self.template.render(self.context.to_dict())
+        self.template.render(**external_render_args)
 
 

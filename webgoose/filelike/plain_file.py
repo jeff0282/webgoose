@@ -9,8 +9,7 @@ Rendering this type of file just outputs its content
 
 from    typing      import      Any
 
-from    ..filelike    import      RenderContext
-from    ..filelike    import      RenderableFile
+from    .           import      RenderableFile
 
 
 class PlainFile(RenderableFile):
@@ -32,28 +31,8 @@ class PlainFile(RenderableFile):
         Create a plain file object, using a string or bytes
         as content
         """
-        self.context = RenderContext()
         self.content = content
         super().__init__()
-
-
-    @property
-    def content(self) -> str | bytes:
-        """
-        The content of this file
-        """
-        return self.context['content']
-    
-
-    @content.setter
-    def content(self, content: str | bytes) -> None:
-        """
-        Set this files content
-        """
-        # 'content' is a fixed mapping, so we can't just overwrite it
-        # Content may also not be set yet (initialisation), so we must check
-        self.context.pop('content') if 'content' in self.context else None
-        self.add_fixed(content=content)
 
         
     def render(self, **render_args: Any) -> str | bytes:
