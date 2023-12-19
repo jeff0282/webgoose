@@ -11,8 +11,10 @@ Who knows, maybe this idea will fall through as well. Though I have hope that th
 
 
 ## Provisional API
-This is the proposed API for Webgoose. It's not exactly polished, but it's getting there :)
+Below is a basic example using Webgoose to contruct a static website, demonstrating some of the core functionality of Webgoose.
 ```python
+from    collections import      defaultdict
+from    typing      import      Type
 from    pathlib     import      Path
 
 from    webgoose    import      Component
@@ -37,9 +39,10 @@ def blog(component):
     Blog section of the site
     """
 
-    tags = component.posts.group("tags", include_missing=True)
-    tag_page = Page(template=".template/tags.jinja2", tags=tags)
-    
+    # make a dedicated page for every tag
+    for tag, posts in component.posts["tags"].values():
+        component.add(f"tags/{tag.lower()}", Page(".src/blog/tags.md"))
+
     
 @blog.attach("posts/")
 def posts(component):
@@ -47,7 +50,14 @@ def posts(component):
     Posts within the blog section of the site
     """
 
+    component["tags"] = defaultdict(list)
     for path in Path.glob(".src/posts/*.md")
+        post = Page(path)
+
+        # add post to tags dict
+        for tag_name in post.meta.get("tag", []):
+            component["tags"][tag_name].append(post)
+
         component.add(path.stem + ".html", Page(path))
 
 
