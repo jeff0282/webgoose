@@ -200,7 +200,7 @@ class URI:
 
         # slug may be empty
         if self.parts:
-            return self[-1]
+            return self.parts[-1]
         
         return ""
     
